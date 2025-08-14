@@ -1,6 +1,7 @@
-import { ShoppingCart, Search, Store } from 'lucide-react';
+import { ShoppingCart, Search, Store, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Link } from 'react-router-dom';
 import { CartSidebar } from './CartSidebar';
 
 export function Header() {
@@ -27,17 +28,29 @@ export function Header() {
             </div>
           </div>
 
-          {/* Cart */}
-          <CartSidebar>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-2 bg-background/50 border-border hover:bg-muted/50"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              <span className="hidden sm:inline">Cart</span>
-            </Button>
-          </CartSidebar>
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <Link to="/login">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2 bg-background/50 border-border hover:bg-muted/50"
+              >
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">Admin</span>
+              </Button>
+            </Link>
+            <CartSidebar>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2 bg-background/50 border-border hover:bg-muted/50"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                <span className="hidden sm:inline">Cart</span>
+              </Button>
+            </CartSidebar>
+          </div>
         </div>
       </div>
     </header>
