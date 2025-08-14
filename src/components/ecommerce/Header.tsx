@@ -30,7 +30,7 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Link to="/login">
+            <Link to="/admin/login">
               <Button 
                 variant="outline" 
                 size="sm" 
