@@ -21,6 +21,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { X, Plus, Package, Upload, Save } from "lucide-react";
+import { productAPI } from "@/lib/api";
 
 interface ProductFormData {
 	name: string;
@@ -101,7 +102,7 @@ const AddProductForm = () => {
 		}));
 	};
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
 		// Validation
@@ -140,52 +141,74 @@ const AddProductForm = () => {
 			return;
 		}
 
-		// Mock product creation
-		const productId = `prod_${Date.now()}`;
-
-		toast({
-			title: "Product Created",
-			description: `${formData.name} has been successfully added to your store`,
-		});
-
-		console.log("New Product:", {
-			id: productId,
-			...formData,
-			price: parseFloat(formData.price),
-			salePrice: formData.salePrice
-				? parseFloat(formData.salePrice)
-				: undefined,
-			stock: parseInt(formData.stock) || 0,
-			weight: formData.weight ? parseFloat(formData.weight) : undefined,
-			dimensions:
-				formData.length && formData.width && formData.height
-					? {
-							length: parseFloat(formData.length),
-							width: parseFloat(formData.width),
-							height: parseFloat(formData.height),
-					  }
+		try {
+			const productData = {
+				name: formData.name,
+				description: formData.description,
+				price: parseFloat(formData.price),
+				salePrice: formData.salePrice
+					? parseFloat(formData.salePrice)
 					: undefined,
-		});
+				category: formData.category,
+				brand: formData.brand,
+				sku: formData.sku,
+				stock: parseInt(formData.stock) || 0,
+				image: formData.image,
+				tags: formData.tags,
+				featured: formData.featured,
+				inStock: formData.inStock,
+				weight: formData.weight
+					? parseFloat(formData.weight)
+					: undefined,
+				dimensions:
+					formData.length &&
+					formData.width &&
+					formData.height
+						? {
+								length: parseFloat(formData.length),
+								width: parseFloat(formData.width),
+								height: parseFloat(formData.height),
+						  }
+						: undefined,
+			};
 
-		// Reset form
-		setFormData({
-			name: "",
-			description: "",
-			price: "",
-			salePrice: "",
-			category: "",
-			brand: "",
-			sku: "",
-			stock: "",
-			weight: "",
-			length: "",
-			width: "",
-			height: "",
-			image: "",
-			tags: [],
-			featured: false,
-			inStock: true,
-		});
+			await productAPI.create(productData);
+
+			toast({
+				title: "Product Created",
+				description: `${formData.name} has been successfully added to your store`,
+			});
+
+			// Reset form
+			setFormData({
+				name: "",
+				description: "",
+				price: "",
+				salePrice: "",
+				category: "",
+				brand: "",
+				sku: "",
+				stock: "",
+				weight: "",
+				length: "",
+				width: "",
+				height: "",
+				image: "",
+				tags: [],
+				featured: false,
+				inStock: true,
+			});
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Failed to create product";
+			toast({
+				title: "Error",
+				description: message,
+				variant: "destructive",
+			});
+		}
 	};
 
 	return (
