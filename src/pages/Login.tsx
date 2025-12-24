@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,25 +11,26 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { authAPI } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const navigate = useNavigate();
 	const { toast } = useToast();
+	const { login } = useAuth();
 
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 
 		try {
-			const response = await authAPI.login(email, password);
-			localStorage.setItem("token", response.token);
+			await login(email, password);
 			toast({
 				title: "Login successful",
-				description: "Welcome to the admin dashboard",
+				description: "Welcome back!",
 			});
-			navigate("/admin");
+			// Redirect based on role or to home
+			navigate("/");
 		} catch (error) {
 			const message =
 				error instanceof Error
@@ -82,8 +83,16 @@ const Login = () => {
 							Sign In
 						</Button>
 					</form>
-					<div className="mt-4 text-center text-sm text-muted-foreground">
-						Demo credentials: admin@store.com / admin123
+					<div className="mt-4 text-center space-y-2">
+						<p className="text-sm text-muted-foreground">
+							Don't have an account?{" "}
+							<Link
+								to="/register"
+								className="text-primary hover:underline font-medium"
+							>
+								Sign up
+							</Link>
+						</p>
 					</div>
 				</CardContent>
 			</Card>
