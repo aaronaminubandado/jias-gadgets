@@ -11,6 +11,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { authAPI } from "@/lib/api";
 
 const Login = () => {
 	const [email, setEmail] = useState("");
@@ -18,20 +19,25 @@ const Login = () => {
 	const navigate = useNavigate();
 	const { toast } = useToast();
 
-	const handleLogin = (e: React.FormEvent) => {
+	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		// Mock login - in real app this would authenticate with backend
-		if (email === "admin@store.com" && password === "admin123") {
+		try {
+			const response = await authAPI.login(email, password);
+			localStorage.setItem("token", response.token);
 			toast({
 				title: "Login successful",
 				description: "Welcome to the admin dashboard",
 			});
 			navigate("/admin");
-		} else {
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Invalid email or password";
 			toast({
 				title: "Login failed",
-				description: "Invalid email or password",
+				description: message,
 				variant: "destructive",
 			});
 		}
