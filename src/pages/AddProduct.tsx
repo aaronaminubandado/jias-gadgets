@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { X, Plus, Package, Upload, Save } from "lucide-react";
+import { X, Plus, Package, Upload, Save, Image as ImageIcon } from "lucide-react";
 import { productAPI } from "@/lib/api";
 
 interface ProductFormData {
@@ -56,6 +56,9 @@ const CATEGORIES = [
 const AddProductForm = () => {
 	const { toast } = useToast();
 	const [newTag, setNewTag] = useState("");
+	const [imageFile, setImageFile] = useState<File | null>(null);
+	const [imagePreview, setImagePreview] = useState<string>("");
+	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [formData, setFormData] = useState<ProductFormData>({
 		name: "",
 		description: "",
@@ -102,6 +105,48 @@ const AddProductForm = () => {
 		}));
 	};
 
+	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			// Validate file type
+			if (!file.type.startsWith("image/")) {
+				toast({
+					title: "Invalid file type",
+					description: "Please select an image file",
+					variant: "destructive",
+				});
+				return;
+			}
+
+			// Validate file size (5MB)
+			if (file.size > 5 * 1024 * 1024) {
+				toast({
+					title: "File too large",
+					description: "Image must be less than 5MB",
+					variant: "destructive",
+				});
+				return;
+			}
+
+			setImageFile(file);
+			const reader = new FileReader();
+			reader.onloadend = () => {
+				setImagePreview(reader.result as string);
+			};
+			reader.readAsDataURL(file);
+			// Clear URL input when file is selected
+			setFormData((prev) => ({ ...prev, image: "" }));
+		}
+	};
+
+	const handleRemoveImage = () => {
+		setImageFile(null);
+		setImagePreview("");
+		if (fileInputRef.current) {
+			fileInputRef.current.value = "";
+		}
+	};
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -142,35 +187,46 @@ const AddProductForm = () => {
 		}
 
 		try {
-			const productData = {
-				name: formData.name,
-				description: formData.description,
-				price: parseFloat(formData.price),
-				salePrice: formData.salePrice
-					? parseFloat(formData.salePrice)
-					: undefined,
-				category: formData.category,
-				brand: formData.brand,
-				sku: formData.sku,
-				stock: parseInt(formData.stock) || 0,
-				image: formData.image,
-				tags: formData.tags,
-				featured: formData.featured,
-				inStock: formData.inStock,
-				weight: formData.weight
-					? parseFloat(formData.weight)
-					: undefined,
-				dimensions:
-					formData.length &&
-					formData.width &&
-					formData.height
-						? {
-								length: parseFloat(formData.length),
-								width: parseFloat(formData.width),
-								height: parseFloat(formData.height),
-						  }
+			// Create FormData if file is uploaded, otherwise use JSON
+			let productData: FormData | Record<string, unknown>;
+
+			if (imageFile) {
+				// Use FormData for file upload
+				const formDataObj = new FormData();
+				formDataObj.append("name", formData.name);
+				formDataObj.append("description", formData.description);
+				formDataObj.append("price", formData.price);
+				if (formData.salePrice) {
+					formDataObj.append("salePrice", formData.salePrice);
+				}
+				formDataObj.append("category", formData.category);
+				if (formData.brand) {
+					formDataObj.append("brand", formData.brand);
+				}
+				formDataObj.append("sku", formData.sku);
+				formDataObj.append("stock", formData.stock || "0");
+				formDataObj.append("tags", JSON.stringify(formData.tags));
+				formDataObj.append("featured", formData.featured.toString());
+				formDataObj.append("image", imageFile);
+				productData = formDataObj;
+			} else {
+				// Use JSON for URL-based image
+				productData = {
+					name: formData.name,
+					description: formData.description,
+					price: parseFloat(formData.price),
+					salePrice: formData.salePrice
+						? parseFloat(formData.salePrice)
 						: undefined,
-			};
+					category: formData.category,
+					brand: formData.brand,
+					sku: formData.sku,
+					stock: parseInt(formData.stock) || 0,
+					image: formData.image,
+					tags: formData.tags,
+					featured: formData.featured,
+				};
+			}
 
 			await productAPI.create(productData);
 
@@ -198,6 +254,11 @@ const AddProductForm = () => {
 				featured: false,
 				inStock: true,
 			});
+			setImageFile(null);
+			setImagePreview("");
+			if (fileInputRef.current) {
+				fileInputRef.current.value = "";
+			}
 		} catch (error) {
 			const message =
 				error instanceof Error
@@ -470,28 +531,72 @@ const AddProductForm = () => {
 								Media & Tags
 							</h3>
 							<div className="space-y-2">
-								<Label htmlFor="image">Product Image URL</Label>
-								<div className="flex gap-2">
-									<Input
-										id="image"
-										placeholder="https://example.com/image.jpg"
-										value={formData.image}
-										onChange={(e) =>
-											handleInputChange(
-												"image",
-												e.target.value
-											)
-										}
-										className="flex-1"
-									/>
-									<Button
-										type="button"
-										variant="outline"
-										size="icon"
-									>
-										<Upload className="h-4 w-4" />
-									</Button>
-								</div>
+								<Label>Product Image</Label>
+								{imagePreview ? (
+									<div className="space-y-2">
+										<div className="relative w-full h-48 border rounded-lg overflow-hidden">
+											<img
+												src={imagePreview}
+												alt="Preview"
+												className="w-full h-full object-cover"
+											/>
+											<Button
+												type="button"
+												variant="destructive"
+												size="sm"
+												className="absolute top-2 right-2"
+												onClick={handleRemoveImage}
+											>
+												<X className="h-4 w-4" />
+											</Button>
+										</div>
+										<p className="text-sm text-muted-foreground">
+											Image ready to upload
+										</p>
+									</div>
+								) : (
+									<div className="space-y-2">
+										<div className="flex gap-2">
+											<Input
+												ref={fileInputRef}
+												type="file"
+												accept="image/*"
+												onChange={handleFileChange}
+												className="hidden"
+												id="image-file"
+											/>
+											<Button
+												type="button"
+												variant="outline"
+												onClick={() =>
+													fileInputRef.current?.click()
+												}
+												className="flex items-center gap-2"
+											>
+												<Upload className="h-4 w-4" />
+												Upload Image
+											</Button>
+											<span className="text-sm text-muted-foreground self-center">
+												or
+											</span>
+											<Input
+												id="image-url"
+												placeholder="Enter image URL"
+												value={formData.image}
+												onChange={(e) =>
+													handleInputChange(
+														"image",
+														e.target.value
+													)
+												}
+												className="flex-1"
+											/>
+										</div>
+										<p className="text-xs text-muted-foreground">
+											Upload an image file (max 5MB) or provide an image URL
+										</p>
+									</div>
+								)}
 							</div>
 
 							<div className="space-y-2">
