@@ -28,7 +28,7 @@ const Register = () => {
 	const navigate = useNavigate();
 	const { toast } = useToast();
 	const { register } = useAuth();
-
+	const [isLoading, setIsLoading] = useState(false);
 	const handleRegister = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -50,6 +50,9 @@ const Register = () => {
 			return;
 		}
 
+		if (isLoading) return;
+
+		setIsLoading(true);
 		try {
 			await register(email, password, role);
 			toast({
@@ -67,6 +70,8 @@ const Register = () => {
 				description: message,
 				variant: "destructive",
 			});
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -130,9 +135,9 @@ const Register = () => {
 								minLength={6}
 							/>
 						</div>
-						<Button type="submit" className="w-full">
-							Sign Up
-						</Button>
+					<Button type="submit" className="w-full" disabled={isLoading}>
+						{isLoading ? "Creating account..." : "Sign Up"}
+					</Button>
 					</form>
 					<div className="mt-4 text-center">
 						<p className="text-sm text-muted-foreground">
