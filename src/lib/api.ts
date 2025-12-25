@@ -1,30 +1,55 @@
-const API_BASE_URL =
-	(import.meta as unknown as { env: { VITE_API_URL?: string } }).env
-		.VITE_API_URL || "http://localhost:5000/api";
+// API Configuration
+const getApiBaseUrl = () => {
+	// Check for environment variable first
+	const envUrl = (
+		import.meta as unknown as { env: { VITE_API_URL?: string } }
+	).env?.VITE_API_URL;
+	
+	if (envUrl) return envUrl;
+	
+	// Fallback to localhost for development
+	return "http://localhost:5000/api";
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
+interface ApiRequestOptions extends RequestInit {
+	requireAuth?: boolean; // If false, don't send auth header (for guest checkout)
+}
+
 async function apiRequest<T>(
 	endpoint: string,
-	options: RequestInit = {}
+	options: ApiRequestOptions = {}
 ): Promise<T> {
+	const { requireAuth = true, ...fetchOptions } = options;
 	const token = localStorage.getItem("token");
 
+	const headers: HeadersInit = {
+		"Content-Type": "application/json",
+		...fetchOptions.headers,
+	};
+
+	// Only add auth header if requireAuth is true and token exists
+	if (requireAuth && token) {
+		(headers as Record<string, string>)[
+			"Authorization"
+		] = `Bearer ${token}`;
+	}
+
 	const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-		...options,
-		method: (options.method || "GET") as HttpMethod,
-		headers: {
-			"Content-Type": "application/json",
-			...(token && { Authorization: `Bearer ${token}` }),
-			...options.headers,
-		},
+		...fetchOptions,
+		method: (fetchOptions.method || "GET") as HttpMethod,
+		headers,
 		credentials: "include",
 	});
 
 	if (!response.ok) {
 		const errorBody = await response.json().catch(() => ({}));
 		const message =
-			(errorBody as { message?: string }).message ||
+			(errorBody as { message?: string; error?: string }).message ||
+			(errorBody as { message?: string; error?: string }).error ||
 			`Request failed with status ${response.status}`;
 		throw new Error(message);
 	}
@@ -32,45 +57,183 @@ async function apiRequest<T>(
 	return response.json();
 }
 
+// Auth API Types
+export interface LoginResponse {
+	token: string;
+	email: string;
+	role: string;
+}
+
+export interface RegisterResponse {
+	token: string;
+	email: string;
+	role: string;
+}
+
+// Product API Types
+export interface BackendProduct {
+	_id: string;
+	name: string;
+	price: number;
+	stock: number;
+	reserved: number;
+	category: string;
+	description: string;
+	image?: string;
+	sku?: string;
+	brand?: string;
+	tags?: string[];
+	featured?: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
+// Order API Types
+export interface OrderProduct {
+	productId: string;
+	name?: string;
+	image?: string;
+	quantity: number;
+	priceCents: number;
+	price: number;
+}
+
+export interface Order {
+	id: string;
+	products: OrderProduct[];
+	totalAmount: number | null;
+	totalAmountCents: number | null;
+	currency: string;
+	status: string;
+	createdAt: string;
+	updatedAt: string;
+	paymentIntentId?: string | null;
+	checkoutSessionId?: string | null;
+	user?: string | null;
+}
+
+export interface OrdersResponse {
+	data: Order[];
+	meta: {
+		total: number;
+		page: number;
+		limit: number;
+	};
+}
+
+// Checkout API Types
+export interface CheckoutItem {
+	id: string;
+	quantity: number;
+}
+
+export interface CheckoutResponse {
+	url: string;
+}
+
+// Auth API
 export const authAPI = {
 	login: (email: string, password: string) =>
-		apiRequest<{ token: string; user: unknown }>("/auth/login", {
+		apiRequest<LoginResponse>("/auth/login", {
 			method: "POST",
 			body: JSON.stringify({ email, password }),
+			requireAuth: false,
 		}),
-	register: (userData: { email: string; password: string; name?: string }) =>
-		apiRequest<{ token: string; user: unknown }>("/auth/register", {
+	register: (userData: { email: string; password: string; role?: string }) =>
+		apiRequest<RegisterResponse>("/auth/register", {
 			method: "POST",
 			body: JSON.stringify(userData),
+			requireAuth: false,
 		}),
 };
 
+// Product API
 export const productAPI = {
-	getAll: () => apiRequest<unknown[]>("/products"),
-	getById: (id: string) => apiRequest<unknown>(`/products/${id}`),
-	create: (productData: unknown) =>
-		apiRequest<unknown>("/products", {
+	getAll: () => apiRequest<BackendProduct[]>("/products", { requireAuth: false }),
+	getByStore: () => apiRequest<BackendProduct[]>("/products/store/my-products"),
+	getById: (id: string) =>
+		apiRequest<BackendProduct>(`/products/${id}`, { requireAuth: false }),
+	create: (productData: FormData | Record<string, unknown>) => {
+		const isFormData = productData instanceof FormData;
+		const token = localStorage.getItem("token");
+		
+		const headers: HeadersInit = {};
+		if (token) {
+			headers.Authorization = `Bearer ${token}`;
+		}
+		// Don't set Content-Type for FormData - browser will set it with boundary
+		if (!isFormData) {
+			headers["Content-Type"] = "application/json";
+		}
+
+		return fetch(`${API_BASE_URL}/products`, {
 			method: "POST",
-			body: JSON.stringify(productData),
-		}),
-	update: (id: string, productData: unknown) =>
-		apiRequest<unknown>(`/products/${id}`, {
+			headers,
+			credentials: "include",
+			body: isFormData ? productData : JSON.stringify(productData),
+		}).then(async (response) => {
+			if (!response.ok) {
+				const errorBody = await response.json().catch(() => ({}));
+				const message =
+					(errorBody as { message?: string; error?: string }).message ||
+					(errorBody as { message?: string; error?: string }).error ||
+					`Request failed with status ${response.status}`;
+				throw new Error(message);
+			}
+			return response.json();
+		}) as Promise<BackendProduct>;
+	},
+	update: (id: string, productData: FormData | Record<string, unknown>) => {
+		const isFormData = productData instanceof FormData;
+		const token = localStorage.getItem("token");
+		
+		const headers: HeadersInit = {};
+		if (token) {
+			headers.Authorization = `Bearer ${token}`;
+		}
+		if (!isFormData) {
+			headers["Content-Type"] = "application/json";
+		}
+
+		return fetch(`${API_BASE_URL}/products/${id}`, {
 			method: "PUT",
-			body: JSON.stringify(productData),
-		}),
+			headers,
+			credentials: "include",
+			body: isFormData ? productData : JSON.stringify(productData),
+		}).then(async (response) => {
+			if (!response.ok) {
+				const errorBody = await response.json().catch(() => ({}));
+				const message =
+					(errorBody as { message?: string; error?: string }).message ||
+					(errorBody as { message?: string; error?: string }).error ||
+					`Request failed with status ${response.status}`;
+				throw new Error(message);
+			}
+			return response.json();
+		}) as Promise<BackendProduct>;
+	},
 	delete: (id: string) =>
 		apiRequest<void>(`/products/${id}`, { method: "DELETE" }),
 };
 
+// Order API
 export const orderAPI = {
-	getAll: () => apiRequest<unknown[]>("/orders"),
-	getById: (id: string) => apiRequest<unknown>(`/orders/${id}`),
+	getAll: (page?: number, limit?: number) => {
+		const params = new URLSearchParams();
+		if (page) params.append("page", page.toString());
+		if (limit) params.append("limit", limit.toString());
+		const query = params.toString() ? `?${params.toString()}` : "";
+		return apiRequest<OrdersResponse>(`/orders${query}`);
+	},
+	getById: (id: string) => apiRequest<{ data: Order }>(`/orders/${id}`),
 };
 
+// Checkout API - Guest checkout supported (no auth required)
 export const checkoutAPI = {
-	createSession: (items: unknown[]) =>
-		apiRequest<{ sessionId: string; url: string }>("/checkout/session", {
+	createSession: (items: CheckoutItem[]) =>
+		apiRequest<CheckoutResponse>("/checkout", {
 			method: "POST",
 			body: JSON.stringify({ items }),
+			requireAuth: false, // Guest checkout is supported
 		}),
 };
