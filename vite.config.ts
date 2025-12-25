@@ -15,8 +15,6 @@ export default defineConfig(({ mode }) => {
 				"/api": {
 					target: apiUrl,
 					changeOrigin: true,
-					// Remove /api prefix when proxying if needed
-					rewrite: (path) => path.replace(/^\/api/, "/api"),
 				},
 			},
 		},
