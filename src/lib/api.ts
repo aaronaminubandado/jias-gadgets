@@ -54,7 +54,9 @@ async function apiRequest<T>(
 		throw new Error(message);
 	}
 
-	return response.json();
+	// Handle empty responses (e.g., 204 No Content)
+	const text = await response.text();
+	return text ? JSON.parse(text) : undefined;
 }
 
 // Auth API Types
