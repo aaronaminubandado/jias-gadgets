@@ -32,10 +32,7 @@ const Login = () => {
 			// Redirect based on role or to home
 			navigate("/");
 		} catch (error) {
-			const message =
-				error instanceof Error
-					? error.message
-					: "Invalid email or password";
+			const message = "Invalid email or password";
 			toast({
 				title: "Login failed",
 				description: message,
