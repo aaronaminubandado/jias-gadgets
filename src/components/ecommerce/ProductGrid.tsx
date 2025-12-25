@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Filter, Grid, List } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Filter, Grid, List, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	Select,
@@ -9,12 +9,62 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { ProductCard } from "./ProductCard";
-import { products } from "@/data/product";
+import { productAPI, BackendProduct } from "@/lib/api";
+import { Product } from "@/types/product";
+import { useToast } from "@/hooks/use-toast";
+
+// Convert backend product to frontend product format
+const convertProduct = (backendProduct: BackendProduct): Product => {
+	return {
+		id: backendProduct._id,
+		name: backendProduct.name,
+		price: backendProduct.price,
+		image: backendProduct.image || "/placeholder.svg",
+		description: backendProduct.description || "",
+		category: backendProduct.category,
+		rating: 0, // Backend doesn't have rating, default to 0
+		inStock: (backendProduct.stock - backendProduct.reserved) > 0,
+		stock: backendProduct.stock - backendProduct.reserved,
+		sku: backendProduct.sku || "",
+		brand: backendProduct.brand || "",
+		tags: backendProduct.tags || [],
+		featured: backendProduct.featured || false,
+	};
+};
 
 export function ProductGrid() {
 	const [sortBy, setSortBy] = useState("name");
 	const [filterCategory, setFilterCategory] = useState("all");
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+	const [products, setProducts] = useState<Product[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const { toast } = useToast();
+
+	useEffect(() => {
+		const fetchProducts = async () => {
+			try {
+				setIsLoading(true);
+				setError(null);
+				const backendProducts = await productAPI.getAll();
+				const convertedProducts = backendProducts.map(convertProduct);
+				setProducts(convertedProducts);
+			} catch (err) {
+				const errorMessage =
+					err instanceof Error ? err.message : "Failed to load products";
+				setError(errorMessage);
+				toast({
+					title: "Error",
+					description: errorMessage,
+					variant: "destructive",
+				});
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchProducts();
+	}, [toast]);
 
 	const categories = [
 		"all",
@@ -113,26 +163,46 @@ export function ProductGrid() {
 			</div>
 
 			{/* Products Grid */}
-			<div
-				className={`grid gap-6 ${
-					viewMode === "grid"
-						? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-						: "grid-cols-1"
-				}`}
-			>
-				{filteredAndSortedProducts.map((product) => (
-					<div key={product.id} className="fade-in">
-						<ProductCard product={product} />
-					</div>
-				))}
-			</div>
-
-			{filteredAndSortedProducts.length === 0 && (
-				<div className="text-center py-12">
-					<p className="text-lg text-muted-foreground">
-						No products found matching your criteria.
-					</p>
+			{isLoading ? (
+				<div className="flex items-center justify-center py-12">
+					<Loader2 className="w-8 h-8 animate-spin text-primary" />
+					<span className="ml-2 text-muted-foreground">Loading products...</span>
 				</div>
+			) : error ? (
+				<div className="text-center py-12">
+					<p className="text-lg text-destructive">{error}</p>
+					<Button
+						variant="outline"
+						onClick={() => window.location.reload()}
+						className="mt-4"
+					>
+						Retry
+					</Button>
+				</div>
+			) : (
+				<>
+					<div
+						className={`grid gap-6 ${
+							viewMode === "grid"
+								? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+								: "grid-cols-1"
+						}`}
+					>
+						{filteredAndSortedProducts.map((product) => (
+							<div key={product.id} className="fade-in">
+								<ProductCard product={product} />
+							</div>
+						))}
+					</div>
+
+					{filteredAndSortedProducts.length === 0 && (
+						<div className="text-center py-12">
+							<p className="text-lg text-muted-foreground">
+								No products found matching your criteria.
+							</p>
+						</div>
+					)}
+				</>
 			)}
 		</div>
 	);
