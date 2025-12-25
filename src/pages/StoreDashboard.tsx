@@ -20,6 +20,17 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { productAPI, orderAPI, BackendProduct, OrdersResponse } from "@/lib/api";
@@ -33,6 +44,7 @@ const StoreDashboard = () => {
 	const [orders, setOrders] = useState<OrdersResponse | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [activeTab, setActiveTab] = useState<"products" | "orders">("products");
+	const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (!isAuthenticated) {
@@ -51,7 +63,8 @@ const StoreDashboard = () => {
 		}
 
 		loadData();
-	}, [isAuthenticated, user, navigate, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isAuthenticated, user?.role, navigate]);
 
 	const loadData = async () => {
 		try {
@@ -67,9 +80,13 @@ const StoreDashboard = () => {
 			setProducts(productsData);
 			setOrders(ordersData);
 		} catch (error) {
+			const errorMessage =
+				error instanceof Error
+					? error.message
+					: "Failed to load dashboard data";
 			toast({
 				title: "Error",
-				description: "Failed to load dashboard data",
+				description: errorMessage,
 				variant: "destructive",
 			});
 		} finally {
@@ -78,16 +95,13 @@ const StoreDashboard = () => {
 	};
 
 	const handleDeleteProduct = async (id: string) => {
-		if (!confirm("Are you sure you want to delete this product?")) {
-			return;
-		}
-
 		try {
 			await productAPI.delete(id);
 			toast({
 				title: "Product Deleted",
 				description: "Product has been removed from your store",
 			});
+			setProductToDelete(null);
 			loadData();
 		} catch (error) {
 			const message =
@@ -292,15 +306,49 @@ const StoreDashboard = () => {
 															>
 																<Edit className="w-4 h-4" />
 															</Button>
-															<Button
-																variant="destructive"
-																size="sm"
-																onClick={() =>
-																	handleDeleteProduct(product._id)
+															<AlertDialog
+																open={productToDelete === product._id}
+																onOpenChange={(open) =>
+																	setProductToDelete(
+																		open ? product._id : null
+																	)
 																}
 															>
-																<Trash2 className="w-4 h-4" />
-															</Button>
+																<AlertDialogTrigger asChild>
+																	<Button
+																		variant="destructive"
+																		size="sm"
+																	>
+																		<Trash2 className="w-4 h-4" />
+																	</Button>
+																</AlertDialogTrigger>
+																<AlertDialogContent>
+																	<AlertDialogHeader>
+																		<AlertDialogTitle>
+																			Are you sure?
+																		</AlertDialogTitle>
+																		<AlertDialogDescription>
+																			This action cannot be undone. This will
+																			permanently delete the product from your
+																			store.
+																		</AlertDialogDescription>
+																	</AlertDialogHeader>
+																	<AlertDialogFooter>
+																		<AlertDialogCancel>
+																			Cancel
+																		</AlertDialogCancel>
+																		<AlertDialogAction
+																			onClick={() =>
+																				handleDeleteProduct(
+																					product._id
+																				)
+																			}
+																		>
+																			Delete
+																		</AlertDialogAction>
+																	</AlertDialogFooter>
+																</AlertDialogContent>
+															</AlertDialog>
 														</div>
 													</div>
 												))}
