@@ -30,8 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 		if (storedToken && storedUser) {
 			try {
-				setToken(storedToken);
-				setUser(JSON.parse(storedUser));
+				const parsedUser = JSON.parse(storedUser);
+				// Validate user object shape
+				if (parsedUser && typeof parsedUser.email === 'string' && typeof parsedUser.role === 'string') {
+					setToken(storedToken);
+					setUser(parsedUser);
+				} else {
+					// Invalid user object structure
+					localStorage.removeItem("token");
+					localStorage.removeItem("user");
+				}
 			} catch (error) {
 				// Invalid stored data, clear it
 				localStorage.removeItem("token");
