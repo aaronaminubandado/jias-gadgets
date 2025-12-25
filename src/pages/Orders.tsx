@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Package, Loader2, ArrowLeft, Calendar, DollarSign } from "lucide-react";
+import {
+	Package,
+	Loader2,
+	ArrowLeft,
+	Calendar,
+	DollarSign,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -35,7 +41,11 @@ const Orders = () => {
 				setIsLoading(true);
 				const response = await orderAPI.getAll(page, 10);
 				setOrders(response.data);
-				setTotalPages(Math.ceil(response.meta.total / response.meta.limit));
+				if (response.meta?.limit && response.meta.limit > 0) {
+                    					setTotalPages(Math.ceil(response.meta.total / response.meta.limit));
+                    				} else {
+                    					setTotalPages(1);
+                    				}
 			} catch (error) {
 				const errorMessage =
 					error instanceof Error
@@ -52,7 +62,7 @@ const Orders = () => {
 		};
 
 		fetchOrders();
-	}, [isAuthenticated, navigate, page, toast]);
+	}, [isAuthenticated, navigate, page]);
 
 	const getStatusColor = (status: string) => {
 		switch (status.toLowerCase()) {
@@ -102,7 +112,9 @@ const Orders = () => {
 					<Card>
 						<CardContent className="flex flex-col items-center justify-center py-12">
 							<Package className="w-16 h-16 text-muted-foreground mb-4" />
-							<h3 className="text-lg font-semibold mb-2">No orders yet</h3>
+							<h3 className="text-lg font-semibold mb-2">
+								No orders yet
+							</h3>
 							<p className="text-muted-foreground mb-4">
 								You haven't placed any orders yet.
 							</p>
@@ -120,19 +132,31 @@ const Orders = () => {
 										<div>
 											<CardTitle className="flex items-center gap-2">
 												<Package className="w-5 h-5" />
-												Order #{order.id.slice(-8).toUpperCase()}
+												Order #
+												{order.id
+													.slice(-8)
+													.padStart(8, "0")
+													.toUpperCase()}
 											</CardTitle>
 											<CardDescription className="flex items-center gap-4 mt-2">
 												<span className="flex items-center gap-1">
 													<Calendar className="w-4 h-4" />
-													{format(
-														new Date(order.createdAt),
-														"MMM dd, yyyy 'at' h:mm a"
-													)}
+													{order.createdAt
+														? format(
+																new Date(
+																	order.createdAt
+																),
+																"MMM dd, yyyy 'at' h:mm a"
+														  )
+														: "Date not available"}
 												</span>
 											</CardDescription>
 										</div>
-										<Badge variant={getStatusColor(order.status)}>
+										<Badge
+											variant={getStatusColor(
+												order.status
+											)}
+										>
 											{order.status.toUpperCase()}
 										</Badge>
 									</div>
@@ -140,33 +164,50 @@ const Orders = () => {
 								<CardContent>
 									<div className="space-y-4">
 										<div className="space-y-2">
-											{order.products.map((product, index) => (
-												<div
-													key={index}
-													className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-												>
-													<div className="flex items-center gap-3">
-														{product.image && (
-															<img
-																src={product.image}
-																alt={product.name || "Product"}
-																className="w-12 h-12 object-cover rounded"
-															/>
-														)}
-														<div>
-															<p className="font-medium">
-																{product.name || "Product"}
-															</p>
-															<p className="text-sm text-muted-foreground">
-																Quantity: {product.quantity}
-															</p>
+											{order.products.map(
+												(product) => (
+													<div
+														key={product.productId}
+														className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+													>
+														<div className="flex items-center gap-3">
+															{product.image && (
+																<img
+																	src={
+																		product.image
+																	}
+																	alt={
+																		product.name ||
+																		"Product"
+																	}
+																	className="w-12 h-12 object-cover rounded"
+																/>
+															)}
+															<div>
+																<p className="font-medium">
+																	{product.name ||
+																		"Product"}
+																</p>
+																<p className="text-sm text-muted-foreground">
+																	Quantity:{" "}
+																	{
+																		product.quantity
+																	}
+																</p>
+															</div>
 														</div>
+														<p className="font-medium">
+															$
+															{typeof product.price ===
+															"number"
+																? product.price.toFixed(
+																		2
+																  )
+																: "0.00"}
+														</p>
 													</div>
-													<p className="font-medium">
-														${product.price.toFixed(2)}
-													</p>
-												</div>
-											))}
+												)
+											)}
 										</div>
 
 										<div className="flex items-center justify-between pt-4 border-t">
@@ -175,7 +216,10 @@ const Orders = () => {
 												Total:
 											</span>
 											<span className="text-xl font-bold text-primary">
-												${order.totalAmount?.toFixed(2) || "0.00"}
+												$
+												{order.totalAmount?.toFixed(
+													2
+												) || "0.00"}
 											</span>
 										</div>
 									</div>
@@ -188,7 +232,9 @@ const Orders = () => {
 							<div className="flex items-center justify-center gap-2 pt-4">
 								<Button
 									variant="outline"
-									onClick={() => setPage((p) => Math.max(1, p - 1))}
+									onClick={() =>
+										setPage((p) => Math.max(1, p - 1))
+									}
 									disabled={page === 1}
 								>
 									Previous
@@ -199,7 +245,9 @@ const Orders = () => {
 								<Button
 									variant="outline"
 									onClick={() =>
-										setPage((p) => Math.min(totalPages, p + 1))
+										setPage((p) =>
+											Math.min(totalPages, p + 1)
+										)
 									}
 									disabled={page === totalPages}
 								>
@@ -215,4 +263,3 @@ const Orders = () => {
 };
 
 export default Orders;
-
