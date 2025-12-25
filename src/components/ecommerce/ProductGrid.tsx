@@ -23,8 +23,8 @@ const convertProduct = (backendProduct: BackendProduct): Product => {
 		description: backendProduct.description || "",
 		category: backendProduct.category,
 		rating: 0, // Backend doesn't have rating, default to 0
-		inStock: (backendProduct.stock - backendProduct.reserved) > 0,
-		stock: backendProduct.stock - backendProduct.reserved,
+inStock: (backendProduct.stock - (backendProduct.reserved || 0)) > 0,
+stock: backendProduct.stock - (backendProduct.reserved || 0),
 		sku: backendProduct.sku || "",
 		brand: backendProduct.brand || "",
 		tags: backendProduct.tags || [],
@@ -64,7 +64,8 @@ export function ProductGrid() {
 		};
 
 		fetchProducts();
-	}, [toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	const categories = [
 		"all",
