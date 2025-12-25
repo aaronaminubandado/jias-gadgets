@@ -35,6 +35,7 @@ export function Header() {
 							<Input
 								placeholder="Search products..."
 								className="pl-10 bg-muted/50 border-muted"
+								aria-label="Search products"
 							/>
 						</div>
 					</div>
