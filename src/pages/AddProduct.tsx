@@ -20,7 +20,14 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { X, Plus, Package, Upload, Save, Image as ImageIcon } from "lucide-react";
+import {
+	X,
+	Plus,
+	Package,
+	Upload,
+	Save,
+	Image as ImageIcon,
+} from "lucide-react";
 import { productAPI } from "@/lib/api";
 
 interface ProductFormData {
@@ -133,6 +140,14 @@ const AddProductForm = () => {
 			reader.onloadend = () => {
 				setImagePreview(reader.result as string);
 			};
+			reader.onerror = () => {
+				toast({
+					title: "Error reading file",
+					description: "Failed to load image preview",
+					variant: "destructive",
+				});
+				setImageFile(null);
+			};
 			reader.readAsDataURL(file);
 			// Clear URL input when file is selected
 			setFormData((prev) => ({ ...prev, image: "" }));
@@ -205,8 +220,21 @@ const AddProductForm = () => {
 				}
 				formDataObj.append("sku", formData.sku);
 				formDataObj.append("stock", formData.stock || "0");
+				if (formData.weight) {
+					formDataObj.append("weight", formData.weight);
+				}
+				if (formData.length) {
+					formDataObj.append("length", formData.length);
+				}
+				if (formData.width) {
+					formDataObj.append("width", formData.width);
+				}
+				if (formData.height) {
+					formDataObj.append("height", formData.height);
+				}
 				formDataObj.append("tags", JSON.stringify(formData.tags));
 				formDataObj.append("featured", formData.featured.toString());
+				formDataObj.append("inStock", formData.inStock.toString());
 				formDataObj.append("image", imageFile);
 				productData = formDataObj;
 			} else {
@@ -222,9 +250,22 @@ const AddProductForm = () => {
 					brand: formData.brand,
 					sku: formData.sku,
 					stock: parseInt(formData.stock) || 0,
+					weight: formData.weight
+						? parseFloat(formData.weight)
+						: undefined,
+					length: formData.length
+						? parseFloat(formData.length)
+						: undefined,
+					width: formData.width
+						? parseFloat(formData.width)
+						: undefined,
+					height: formData.height
+						? parseFloat(formData.height)
+						: undefined,
 					image: formData.image,
 					tags: formData.tags,
 					featured: formData.featured,
+					inStock: formData.inStock,
 				};
 			}
 
@@ -593,7 +634,8 @@ const AddProductForm = () => {
 											/>
 										</div>
 										<p className="text-xs text-muted-foreground">
-											Upload an image file (max 5MB) or provide an image URL
+											Upload an image file (max 5MB) or
+											provide an image URL
 										</p>
 									</div>
 								)}
@@ -624,9 +666,9 @@ const AddProductForm = () => {
 								</div>
 								{formData.tags.length > 0 && (
 									<div className="flex flex-wrap gap-2 mt-2">
-										{formData.tags.map((tag, index) => (
+										{formData.tags.map((tag) => (
 											<Badge
-												key={index}
+												key={tag}
 												variant="secondary"
 												className="flex items-center gap-1"
 											>
