@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-	Users,
 	Package,
 	DollarSign,
 	TrendingUp,
@@ -33,6 +32,9 @@ const AdminDashboard = () => {
 	const [orders, setOrders] = useState<OrdersResponse | null>(null);
 	const [products, setProducts] = useState<BackendProduct[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [page, setPage] = useState(1);
+	const [pageSize] = useState(50);
+	const [totalPages, setTotalPages] = useState(1);
 
 	useEffect(() => {
 		if (!isAuthenticated) {
@@ -51,22 +53,31 @@ const AdminDashboard = () => {
 		}
 
 		loadData();
-	}, [isAuthenticated, user, navigate, toast]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isAuthenticated, user?.role, navigate, page]);
 
 	const loadData = async () => {
 		try {
 			setIsLoading(true);
 			const [ordersData, productsData] = await Promise.all([
-				orderAPI.getAll(1, 50),
+				orderAPI.getAll(page, pageSize),
 				productAPI.getAll(),
 			]);
 
 			setOrders(ordersData);
 			setProducts(productsData);
+			// Calculate total pages based on meta.total and pageSize
+			if (ordersData.meta.total) {
+				setTotalPages(Math.ceil(ordersData.meta.total / pageSize));
+			}
 		} catch (error) {
+			const errorMessage =
+				error instanceof Error
+					? error.message
+					: "Failed to load dashboard data";
 			toast({
 				title: "Error",
-				description: "Failed to load dashboard data",
+				description: errorMessage,
 				variant: "destructive",
 			});
 		} finally {
@@ -243,11 +254,42 @@ const AdminDashboard = () => {
 														</div>
 														<div className="mt-2">
 															<p className="text-sm text-muted-foreground">
-																{order.products.length} item(s)
+																{order.products?.length || 0} item(s)
 															</p>
 														</div>
 													</div>
 												))}
+												{/* Pagination Controls */}
+												{totalPages > 1 && (
+													<div className="flex items-center justify-center gap-2 pt-4 border-t">
+														<Button
+															variant="outline"
+															onClick={() =>
+																setPage((p) => Math.max(1, p - 1))
+															}
+															disabled={page === 1 || isLoading}
+														>
+															Previous
+														</Button>
+														<span className="text-sm text-muted-foreground">
+															Page {page} of {totalPages}
+															{orders?.meta.total && (
+																<> ({orders.meta.total} total orders)</>
+															)}
+														</span>
+														<Button
+															variant="outline"
+															onClick={() =>
+																setPage((p) =>
+																	Math.min(totalPages, p + 1)
+																)
+															}
+															disabled={page === totalPages || isLoading}
+														>
+															Next
+														</Button>
+													</div>
+												)}
 											</div>
 										)}
 									</CardContent>
@@ -263,63 +305,70 @@ const AdminDashboard = () => {
 										</CardDescription>
 									</CardHeader>
 									<CardContent>
-										<div className="space-y-4">
-											{orders?.data
-												.filter(
-													(o) =>
-														o.paymentIntentId || o.checkoutSessionId
-												)
-												.map((order) => (
-													<div
-														key={order.id}
-														className="p-4 border rounded-lg"
-													>
-														<div className="flex items-center justify-between">
-															<div>
-																<p className="font-semibold">
-																	Order #{order.id.slice(-8).toUpperCase()}
-																</p>
-																<p className="text-sm text-muted-foreground">
-																	{order.paymentIntentId && (
-																		<span>
-																			Payment Intent:{" "}
-																			{order.paymentIntentId.slice(-12)}
-																		</span>
-																	)}
-																	{order.checkoutSessionId && (
-																		<span>
-																			Session:{" "}
-																			{order.checkoutSessionId.slice(-12)}
-																		</span>
-																	)}
-																</p>
-															</div>
-															<div className="text-right">
-																<p className="font-semibold">
-																	${order.totalAmount?.toFixed(2) || "0.00"}
-																</p>
-																<Badge
-																	variant={
-																		order.status === "paid" ||
-																		order.status === "completed"
-																			? "default"
-																			: "secondary"
-																	}
-																>
-																	{order.status}
-																</Badge>
+										{(() => {
+											const ordersWithPayments = orders?.data.filter(
+												(o) => o.paymentIntentId || o.checkoutSessionId
+											) || [];
+
+											if (ordersWithPayments.length === 0) {
+												return (
+													<div className="text-center py-12">
+														<CreditCard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+														<p className="text-lg font-semibold mb-2">
+															No payment records
+														</p>
+													</div>
+												);
+											}
+
+											return (
+												<div className="space-y-4">
+													{ordersWithPayments.map((order) => (
+														<div
+															key={order.id}
+															className="p-4 border rounded-lg"
+														>
+															<div className="flex items-center justify-between">
+																<div>
+																	<p className="font-semibold">
+																		Order #{order.id.slice(-8).toUpperCase()}
+																	</p>
+																	<p className="text-sm text-muted-foreground">
+																		{order.paymentIntentId && (
+																			<span>
+																				Payment Intent:{" "}
+																				{order.paymentIntentId.slice(-12)}
+																			</span>
+																		)}
+																		{order.checkoutSessionId && (
+																			<span>
+																				Session:{" "}
+																				{order.checkoutSessionId.slice(-12)}
+																			</span>
+																		)}
+																	</p>
+																</div>
+																<div className="text-right">
+																	<p className="font-semibold">
+																		${order.totalAmount?.toFixed(2) || "0.00"}
+																	</p>
+																	<Badge
+																		variant={
+																			order.status === "paid" ||
+																			order.status === "completed"
+																				? "default"
+																				: "secondary"
+																		}
+																	>
+																		{order.status}
+																	</Badge>
+																</div>
 															</div>
 														</div>
-													</div>
-												)) || (
-												<div className="text-center py-12">
-													<CreditCard className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-													<p className="text-lg font-semibold mb-2">
-														No payment records
-													</p>
+													))}
 												</div>
-											)}
-										</div>
+											);
+										})()}
 									</CardContent>
 								</Card>
 							</TabsContent>
