@@ -47,7 +47,7 @@ const Cancel = () => {
 							Continue Shopping
 						</Button>
 						<Button
-							onClick={() => navigate(-1)}
+							onClick={() => navigate("/")}
 							className="w-full"
 							variant="outline"
 						>
