@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cart } from "@/types/product";
-import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/use-toast";
 import { checkoutAPI, CheckoutItem } from "@/lib/api";
 
@@ -26,7 +25,6 @@ export function CheckoutModal({
 	onOpenChange,
 	cart,
 }: CheckoutModalProps) {
-	const { clearCart } = useCart();
 	const [isProcessing, setIsProcessing] = useState(false);
 	const { toast } = useToast();
 
@@ -54,6 +52,11 @@ export function CheckoutModal({
 
 			// Redirect to Stripe Checkout
 			if (response.url) {
+                // Validate the URL is from Stripe
+				const url = new URL(response.url);
+				if (!url.hostname.endsWith('.stripe.com') && url.hostname !== 'checkout.stripe.com') {
+					throw new Error("Invalid checkout URL received");
+				}
 				window.location.href = response.url;
 			} else {
 				throw new Error("No checkout URL received");
