@@ -41,6 +41,27 @@ API integration is partially implemented and structured for easy extension.
 
 ---
 
+## Demo Access
+
+The application includes demo accounts for testing purposes.
+
+### Customer Account
+- Email: customer@store.com
+- Password: customer123
+
+### Store Account
+- Email: store@store.com
+- Password: store123
+
+## Stripe Test Payments
+
+Use the following Stripe test card to simulate a successful payment:
+
+- Card Number: 4242 4242 4242 4242
+- Expiry Date: Any future date
+- CVC: Any 3 digits
+- ZIP: Any 5 digits
+
 ## Planned Improvements
 - Full authentication flow
 - Live product data integration
