@@ -141,7 +141,7 @@ export const authAPI = {
 			body: JSON.stringify({ email, password }),
 			requireAuth: false,
 		}),
-	register: (userData: { email: string; password: string; role?: string }) =>
+	register: (userData: { email: string; password: string }) =>
 		apiRequest<RegisterResponse>("/auth/register", {
 			method: "POST",
 			body: JSON.stringify(userData),

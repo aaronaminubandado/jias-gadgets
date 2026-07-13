@@ -10,13 +10,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -24,7 +17,6 @@ const Register = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
-	const [role, setRole] = useState<string>("customer");
 	const navigate = useNavigate();
 	const { toast } = useToast();
 	const { register } = useAuth();
@@ -54,7 +46,7 @@ const Register = () => {
 
 		setIsLoading(true);
 		try {
-			await register(email, password, role);
+			await register(email, password);
 			toast({
 				title: "Registration successful",
 				description: "Welcome! Your account has been created.",
@@ -98,18 +90,6 @@ const Register = () => {
 								onChange={(e) => setEmail(e.target.value)}
 								required
 							/>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="role">Account Type</Label>
-							<Select value={role} onValueChange={setRole}>
-								<SelectTrigger>
-									<SelectValue placeholder="Select account type" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="customer">Customer</SelectItem>
-									<SelectItem value="store">Store Owner</SelectItem>
-								</SelectContent>
-							</Select>
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="password">Password</Label>
