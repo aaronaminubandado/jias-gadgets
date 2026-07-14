@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, ShoppingBag, ArrowRight } from "lucide-react";
+import { CheckCircle, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -11,6 +11,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Header } from "@/components/ecommerce/Header";
+import { Footer } from "@/components/ecommerce/Footer";
 import { useCart } from "@/hooks/useCart";
 
 const Success = () => {
@@ -18,44 +19,40 @@ const Success = () => {
 	const { clearCart } = useCart();
 	const [searchParams] = useSearchParams();
 	const [isVerifying, setIsVerifying] = useState(true);
+	const hasClearedCart = useRef(false);
 
 	useEffect(() => {
-		const verifyPayment = async () => {
-			const sessionId = searchParams.get("session_id");
-			if (!sessionId) {
-				navigate("/cart");
-				return;
-			}
+		const sessionId = searchParams.get("session_id");
+		if (!sessionId) {
+			// No checkout session — nothing to confirm here.
+			navigate("/", { replace: true });
+			return;
+		}
 
-			try {
-				// Verify payment with your backend
-				const response = await fetch(
-					`/api/verify-payment?session_id=${sessionId}`
-				);
-				if (response.ok) {
-					clearCart();
-				} else {
-					navigate("/cart");
-				}
-			} catch (error) {
-				console.error("Payment verification failed:", error);
-				navigate("/cart");
-			} finally {
-				setIsVerifying(false);
-			}
-		};
-
-		verifyPayment();
+		// Stripe only redirects here after a completed checkout; the backend
+		// webhook marks the order paid independently. Clear the cart once.
+		if (!hasClearedCart.current) {
+			hasClearedCart.current = true;
+			clearCart();
+		}
+		setIsVerifying(false);
 	}, [searchParams, navigate, clearCart]);
 
 	if (isVerifying) {
-		return <div>Verifying payment...</div>;
+		return (
+			<div className="min-h-screen bg-gradient-background flex flex-col">
+				<Header />
+				<div className="flex flex-1 items-center justify-center p-4">
+					<Loader2 className="w-8 h-8 animate-spin text-primary" />
+				</div>
+			</div>
+		);
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-background">
+		<div className="min-h-screen bg-gradient-background flex flex-col">
 			<Header />
-			<div className="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
+			<div className="flex flex-1 items-center justify-center p-4">
 				<Card className="w-full max-w-md">
 					<CardHeader className="text-center">
 						<div className="flex justify-center mb-4">
@@ -103,6 +100,7 @@ const Success = () => {
 					</CardContent>
 				</Card>
 			</div>
+			<Footer />
 		</div>
 	);
 };

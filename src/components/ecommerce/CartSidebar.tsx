@@ -31,15 +31,15 @@ export function CartSidebar({ children }: CartSidebarProps) {
             )}
           </div>
         </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-lg bg-sidebar border-sidebar-border">
-          <SheetHeader>
+        <SheetContent className="flex h-full w-full flex-col overflow-hidden sm:max-w-lg bg-sidebar border-sidebar-border">
+          <SheetHeader className="shrink-0">
             <SheetTitle className="flex items-center gap-2 text-sidebar-foreground">
               <ShoppingBag className="w-5 h-5" />
               Shopping Cart ({cart.itemCount} items)
             </SheetTitle>
           </SheetHeader>
           
-          <div className="flex flex-col h-full mt-6">
+          <div className="mt-6 flex min-h-0 flex-1 flex-col">
             {cart.items.length === 0 ? (
               <div className="flex flex-col items-center justify-center flex-1 text-center">
                 <ShoppingBag className="w-16 h-16 text-muted-foreground mb-4" />
@@ -48,7 +48,7 @@ export function CartSidebar({ children }: CartSidebarProps) {
               </div>
             ) : (
               <>
-                <div className="flex-1 overflow-y-auto space-y-4">
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
                   {cart.items.map((item) => (
                     <div key={item.product.id} className="flex gap-4 p-4 bg-card rounded-lg border border-card-border">
                       <img
@@ -105,7 +105,7 @@ export function CartSidebar({ children }: CartSidebarProps) {
                   ))}
                 </div>
                 
-                <div className="border-t border-sidebar-border pt-4 space-y-4">
+                <div className="shrink-0 space-y-4 border-t border-sidebar-border pt-4">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold text-sidebar-foreground">Total:</span>
                     <span className="text-xl font-bold text-primary">${cart.total.toFixed(2)}</span>
