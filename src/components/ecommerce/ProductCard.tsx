@@ -35,7 +35,7 @@ export function ProductCard({ product }: ProductCardProps) {
     <Card className="product-card group border-card-border bg-card hover:shadow-lg transition-all duration-normal">
       <CardContent className="p-0">
         <div className="relative overflow-hidden rounded-t-md">
-          <Link to={`/product/${product.id}`} className="block aspect-[4/3] w-full overflow-hidden bg-muted">
+          <Link to={`/product/${product.id}`} className="block aspect-[2/1] w-full overflow-hidden bg-muted">
             {product.image && product.image !== '/placeholder.svg' ? (
               <img
                 src={product.image}
@@ -44,7 +44,7 @@ export function ProductCard({ product }: ProductCardProps) {
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
-                <ImageIcon className="w-10 h-10 text-muted-foreground" />
+                <ImageIcon className="h-7 w-7 text-muted-foreground/60" />
               </div>
             )}
           </Link>

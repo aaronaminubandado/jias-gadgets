@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Filter } from "lucide-react";
+import { Filter, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -122,45 +122,54 @@ export function ProductGrid() {
 
 			</div>
 
-			{/* Filters */}
-			<div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-				<div className="flex items-center gap-2">
-					<Filter className="w-4 h-4 text-muted-foreground" />
-					<span className="text-sm font-medium">Filters:</span>
+			{/* Filters & sort */}
+			<div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+				<div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+					<div className="flex items-center gap-2">
+						<Filter className="w-4 h-4 text-muted-foreground" />
+						<span className="text-sm font-medium">Filters:</span>
+					</div>
+
+					<Select
+						value={filterCategory}
+						onValueChange={setFilterCategory}
+					>
+						<SelectTrigger className="w-[180px]">
+							<SelectValue placeholder="Category" />
+						</SelectTrigger>
+						<SelectContent>
+							{categories.map((category) => (
+								<SelectItem key={category} value={category}>
+									{category === "all"
+										? "All Categories"
+										: category}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
 				</div>
 
-				<Select
-					value={filterCategory}
-					onValueChange={setFilterCategory}
-				>
-					<SelectTrigger className="w-[180px]">
-						<SelectValue placeholder="Category" />
-					</SelectTrigger>
-					<SelectContent>
-						{categories.map((category) => (
-							<SelectItem key={category} value={category}>
-								{category === "all"
-									? "All Categories"
-									: category}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+				<div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+					<div className="flex items-center gap-2">
+						<ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+						<span className="text-sm font-medium">Sort by:</span>
+					</div>
 
-				<Select value={sortBy} onValueChange={setSortBy}>
-					<SelectTrigger className="w-[180px]">
-						<SelectValue placeholder="Sort by" />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="name">Name A-Z</SelectItem>
-						<SelectItem value="price-low">
-							Price: Low to High
-						</SelectItem>
-						<SelectItem value="price-high">
-							Price: High to Low
-						</SelectItem>
-					</SelectContent>
-				</Select>
+					<Select value={sortBy} onValueChange={setSortBy}>
+						<SelectTrigger className="w-[180px]">
+							<SelectValue placeholder="Sort by" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="name">Name A-Z</SelectItem>
+							<SelectItem value="price-low">
+								Price: Low to High
+							</SelectItem>
+							<SelectItem value="price-high">
+								Price: High to Low
+							</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
 			</div>
 
 			{/* Products Grid */}
@@ -169,7 +178,7 @@ export function ProductGrid() {
 					{Array.from({ length: 8 }).map((_, i) => (
 						<Card key={i} className="border-card-border bg-card">
 							<CardContent className="p-0">
-								<Skeleton className="aspect-[4/3] w-full rounded-b-none" />
+								<Skeleton className="aspect-[2/1] w-full rounded-b-none" />
 								<div className="space-y-3 p-6">
 									<Skeleton className="h-5 w-3/4" />
 									<Skeleton className="h-4 w-full" />
