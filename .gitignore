@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 
 .env
+
+# Product seed images live in backend data/images/ and are uploaded to Cloudinary
+public/products/*.png
+public/products/*.jpg
+public/products/*.webp
