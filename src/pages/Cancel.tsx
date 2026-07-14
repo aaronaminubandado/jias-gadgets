@@ -9,14 +9,15 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Header } from "@/components/ecommerce/Header";
+import { Footer } from "@/components/ecommerce/Footer";
 
 const Cancel = () => {
 	const navigate = useNavigate();
 
 	return (
-		<div className="min-h-screen bg-gradient-background">
+		<div className="min-h-screen bg-gradient-background flex flex-col">
 			<Header />
-			<div className="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
+			<div className="flex flex-1 items-center justify-center p-4">
 			<Card className="w-full max-w-md">
 				<CardHeader className="text-center">
 					<div className="flex justify-center mb-4">
@@ -58,6 +59,7 @@ const Cancel = () => {
 				</CardContent>
 			</Card>
 			</div>
+			<Footer />
 		</div>
 	);
 };

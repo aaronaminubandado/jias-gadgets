@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
 	Package,
-	Loader2,
 	ArrowLeft,
 	Calendar,
 	DollarSign,
+	Check,
+	Clock,
+	X,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -20,6 +23,77 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { orderAPI, Order } from "@/lib/api";
 import { format } from "date-fns";
+import { Footer } from "@/components/ecommerce/Footer";
+
+// Visualizes the payment lifecycle. Backend order statuses are exactly
+// pending | paid | failed | refunded — there are no fulfillment states.
+const OrderStatusStepper = ({ status }: { status: string }) => {
+	const normalized = status.toLowerCase();
+
+	const paymentStep = (() => {
+		switch (normalized) {
+			case "paid":
+				return {
+					icon: <Check className="w-3.5 h-3.5" />,
+					circle: "bg-primary text-primary-foreground",
+					label: "Paid",
+					labelClass: "text-foreground",
+					refunded: false,
+				};
+			case "failed":
+				return {
+					icon: <X className="w-3.5 h-3.5" />,
+					circle: "bg-destructive text-destructive-foreground",
+					label: "Payment failed",
+					labelClass: "text-destructive",
+					refunded: false,
+				};
+			case "refunded":
+				return {
+					icon: <Check className="w-3.5 h-3.5" />,
+					circle: "bg-primary text-primary-foreground",
+					label: "Paid",
+					labelClass: "text-foreground",
+					refunded: true,
+				};
+			default:
+				return {
+					icon: <Clock className="w-3.5 h-3.5" />,
+					circle: "border-2 border-muted-foreground/40 text-muted-foreground bg-transparent",
+					label: "Awaiting payment",
+					labelClass: "text-muted-foreground",
+					refunded: false,
+				};
+		}
+	})();
+
+	return (
+		<div className="flex items-center gap-2">
+			<div className="flex items-center gap-2">
+				<span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
+					<Check className="w-3.5 h-3.5" />
+				</span>
+				<span className="text-sm text-foreground">Order placed</span>
+			</div>
+
+			<span className="h-px w-8 bg-border" aria-hidden="true" />
+
+			<div className="flex items-center gap-2">
+				<span
+					className={`flex h-6 w-6 items-center justify-center rounded-full ${paymentStep.circle}`}
+				>
+					{paymentStep.icon}
+				</span>
+				<span className={`text-sm ${paymentStep.labelClass}`}>
+					{paymentStep.label}
+				</span>
+				{paymentStep.refunded && (
+					<Badge variant="outline">Refunded</Badge>
+				)}
+			</div>
+		</div>
+	);
+};
 
 const Orders = () => {
 	const [orders, setOrders] = useState<Order[]>([]);
@@ -84,7 +158,8 @@ const Orders = () => {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4">
+		<div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col">
+			<div className="flex-1 p-4">
 			<div className="max-w-4xl mx-auto">
 				<div className="mb-6">
 					<Button
@@ -102,11 +177,19 @@ const Orders = () => {
 				</div>
 
 				{isLoading ? (
-					<div className="flex items-center justify-center py-12">
-						<Loader2 className="w-8 h-8 animate-spin text-primary" />
-						<span className="ml-2 text-muted-foreground">
-							Loading orders...
-						</span>
+					<div className="space-y-4">
+						{Array.from({ length: 3 }).map((_, i) => (
+							<Card key={i}>
+								<CardHeader>
+									<Skeleton className="h-6 w-2/3" />
+									<Skeleton className="mt-2 h-4 w-1/3" />
+								</CardHeader>
+								<CardContent className="space-y-3">
+									<Skeleton className="h-16 w-full" />
+									<Skeleton className="h-16 w-full" />
+								</CardContent>
+							</Card>
+						))}
 					</div>
 				) : orders.length === 0 ? (
 					<Card>
@@ -163,6 +246,9 @@ const Orders = () => {
 								</CardHeader>
 								<CardContent>
 									<div className="space-y-4">
+										<OrderStatusStepper
+											status={order.status}
+										/>
 										<div className="space-y-2">
 											{order.products.map(
 												(product) => (
@@ -258,6 +344,8 @@ const Orders = () => {
 					</div>
 				)}
 			</div>
+			</div>
+			<Footer />
 		</div>
 	);
 };
