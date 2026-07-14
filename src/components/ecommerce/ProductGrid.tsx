@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
-import { Filter, Grid, List, Loader2 } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Select,
 	SelectContent,
@@ -9,36 +12,19 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { ProductCard } from "./ProductCard";
-import { productAPI, BackendProduct } from "@/lib/api";
+import { productAPI } from "@/lib/api";
 import { Product } from "@/types/product";
+import { convertProduct } from "@/lib/convertProduct";
 import { useToast } from "@/hooks/use-toast";
-
-// Convert backend product to frontend product format
-const convertProduct = (backendProduct: BackendProduct): Product => {
-	return {
-		id: backendProduct._id,
-		name: backendProduct.name,
-		price: backendProduct.price,
-		image: backendProduct.image || "/placeholder.svg",
-		description: backendProduct.description || "",
-		category: backendProduct.category,
-		rating: 0, // Backend doesn't have rating, default to 0
-inStock: (backendProduct.stock - (backendProduct.reserved || 0)) > 0,
-stock: backendProduct.stock - (backendProduct.reserved || 0),
-		sku: backendProduct.sku || "",
-		brand: backendProduct.brand || "",
-		tags: backendProduct.tags || [],
-		featured: backendProduct.featured || false,
-	};
-};
 
 export function ProductGrid() {
 	const [sortBy, setSortBy] = useState("name");
 	const [filterCategory, setFilterCategory] = useState("all");
-	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 	const [products, setProducts] = useState<Product[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [searchParams] = useSearchParams();
+	const searchQuery = (searchParams.get("q") ?? "").trim().toLowerCase();
 	const { toast } = useToast();
 
 	useEffect(() => {
@@ -72,19 +58,31 @@ export function ProductGrid() {
 		...Array.from(new Set(products.map((p) => p.category))),
 	];
 
+	const featured = products.filter((p) => p.featured);
+
 	const filteredAndSortedProducts = products
 		.filter(
 			(product) =>
 				filterCategory === "all" || product.category === filterCategory
 		)
+		.filter((product) => {
+			if (!searchQuery) return true;
+			const haystack = [
+				product.name,
+				product.brand,
+				product.category,
+				product.tags.join(" "),
+			]
+				.join(" ")
+				.toLowerCase();
+			return haystack.includes(searchQuery);
+		})
 		.sort((a, b) => {
 			switch (sortBy) {
 				case "price-low":
 					return a.price - b.price;
 				case "price-high":
 					return b.price - a.price;
-				case "rating":
-					return b.rating - a.rating;
 				default:
 					return a.name.localeCompare(b.name);
 			}
@@ -92,6 +90,25 @@ export function ProductGrid() {
 
 	return (
 		<div className="space-y-6">
+			{/* Featured strip */}
+			{!isLoading && !error && featured.length > 0 && (
+				<section>
+					<p className="font-mono text-xs uppercase tracking-[0.25em] text-muted-foreground">
+						Staff picks
+					</p>
+					<h2 className="mt-1 font-display text-2xl font-bold text-foreground">
+						Featured
+					</h2>
+					<div className="mt-4 flex gap-6 overflow-x-auto pb-4">
+						{featured.map((product) => (
+							<div key={product.id} className="w-[280px] shrink-0">
+								<ProductCard product={product} />
+							</div>
+						))}
+					</div>
+				</section>
+			)}
+
 			{/* Header */}
 			<div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
 				<div>
@@ -103,22 +120,6 @@ export function ProductGrid() {
 					</p>
 				</div>
 
-				<div className="flex items-center gap-2">
-					<Button
-						variant={viewMode === "grid" ? "default" : "outline"}
-						size="sm"
-						onClick={() => setViewMode("grid")}
-					>
-						<Grid className="w-4 h-4" />
-					</Button>
-					<Button
-						variant={viewMode === "list" ? "default" : "outline"}
-						size="sm"
-						onClick={() => setViewMode("list")}
-					>
-						<List className="w-4 h-4" />
-					</Button>
-				</div>
 			</div>
 
 			{/* Filters */}
@@ -158,16 +159,25 @@ export function ProductGrid() {
 						<SelectItem value="price-high">
 							Price: High to Low
 						</SelectItem>
-						<SelectItem value="rating">Highest Rated</SelectItem>
 					</SelectContent>
 				</Select>
 			</div>
 
 			{/* Products Grid */}
 			{isLoading ? (
-				<div className="flex items-center justify-center py-12">
-					<Loader2 className="w-8 h-8 animate-spin text-primary" />
-					<span className="ml-2 text-muted-foreground">Loading products...</span>
+				<div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+					{Array.from({ length: 8 }).map((_, i) => (
+						<Card key={i} className="border-card-border bg-card">
+							<CardContent className="p-0">
+								<Skeleton className="aspect-[4/3] w-full rounded-b-none" />
+								<div className="space-y-3 p-6">
+									<Skeleton className="h-5 w-3/4" />
+									<Skeleton className="h-4 w-full" />
+									<Skeleton className="h-8 w-1/3" />
+								</div>
+							</CardContent>
+						</Card>
+					))}
 				</div>
 			) : error ? (
 				<div className="text-center py-12">
@@ -182,13 +192,7 @@ export function ProductGrid() {
 				</div>
 			) : (
 				<>
-					<div
-						className={`grid gap-6 ${
-							viewMode === "grid"
-								? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-								: "grid-cols-1"
-						}`}
-					>
+					<div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 						{filteredAndSortedProducts.map((product) => (
 							<div key={product.id} className="fade-in">
 								<ProductCard product={product} />

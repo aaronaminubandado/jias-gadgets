@@ -1,4 +1,5 @@
-import { Star, ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Image as ImageIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,11 +35,19 @@ export function ProductCard({ product }: ProductCardProps) {
     <Card className="product-card group border-card-border bg-card hover:shadow-lg transition-all duration-normal">
       <CardContent className="p-0">
         <div className="relative overflow-hidden rounded-t-md">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-64 object-cover transition-transform duration-normal group-hover:scale-105"
-          />
+          <Link to={`/product/${product.id}`} className="block aspect-[4/3] w-full overflow-hidden bg-muted">
+            {product.image && product.image !== '/placeholder.svg' ? (
+              <img
+                src={product.image}
+                alt={product.name}
+                className="h-full w-full object-cover transition-transform duration-normal group-hover:scale-105"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <ImageIcon className="w-10 h-10 text-muted-foreground" />
+              </div>
+            )}
+          </Link>
           {!product.inStock && (
             <Badge 
               variant="destructive" 
@@ -56,24 +65,30 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
         
         <div className="p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-card-foreground line-clamp-1">
+          <h3 className="mb-2 font-display text-lg font-semibold text-card-foreground line-clamp-1">
+            <Link
+              to={`/product/${product.id}`}
+              className="hover:text-primary transition-colors"
+            >
               {product.name}
-            </h3>
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-accent text-accent" />
-              <span className="text-sm text-muted-foreground">{product.rating}</span>
-            </div>
-          </div>
+            </Link>
+          </h3>
           
           <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
             {product.description}
           </p>
           
           <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold text-primary">
-              ${product.price}
-            </span>
+            <div>
+              <span className="font-mono text-2xl font-bold text-primary">
+                ${product.price.toFixed(2)}
+              </span>
+              {product.inStock && product.stock <= 5 && (
+                <p className="text-xs font-medium text-accent">
+                  Only {product.stock} left
+                </p>
+              )}
+            </div>
             <Button 
               onClick={handleAddToCart}
               disabled={!product.inStock}

@@ -5,7 +5,6 @@ export interface Product {
 	image: string;
 	description: string;
 	category: string;
-	rating: number;
 	inStock: boolean;
 	stock: number;
 	sku: string;
@@ -18,7 +17,6 @@ export interface Product {
 	};
 	tags: string[];
 	featured: boolean;
-	salePrice?: number;
 }
 
 export interface CartItem {
