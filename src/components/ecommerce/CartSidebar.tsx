@@ -112,7 +112,7 @@ export function CartSidebar({ children }: CartSidebarProps) {
                   </div>
                   
                   <Button 
-                    className="w-full gap-2 bg-gradient-primary hover:opacity-90 transition-opacity"
+                    className="w-full gap-2"
                     onClick={() => setShowCheckout(true)}
                   >
                     <CreditCard className="w-4 h-4" />

@@ -16,6 +16,7 @@ import { productAPI } from "@/lib/api";
 import { Product } from "@/types/product";
 import { convertProduct } from "@/lib/convertProduct";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 export function ProductGrid() {
 	const [sortBy, setSortBy] = useState("name");
@@ -89,19 +90,19 @@ export function ProductGrid() {
 		});
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-10 md:space-y-12">
 			{/* Featured strip */}
 			{!isLoading && !error && featured.length > 0 && (
-				<section>
+				<section className="space-y-4">
 					<p className="font-mono text-xs uppercase tracking-[0.25em] text-muted-foreground">
 						Staff picks
 					</p>
-					<h2 className="mt-1 font-display text-2xl font-bold text-foreground">
+					<h2 className="font-display text-2xl font-bold text-foreground">
 						Featured
 					</h2>
-					<div className="mt-4 flex gap-6 overflow-x-auto pb-4">
+					<div className="flex gap-6 overflow-x-auto pb-2 pt-2">
 						{featured.map((product) => (
-							<div key={product.id} className="w-[280px] shrink-0">
+							<div key={product.id} className="h-full w-[280px] shrink-0">
 								<ProductCard product={product} />
 							</div>
 						))}
@@ -109,6 +110,9 @@ export function ProductGrid() {
 				</section>
 			)}
 
+			{!isLoading && !error && featured.length > 0 && <Separator />}
+
+			<section className="space-y-8">
 			{/* Header */}
 			<div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
 				<div>
@@ -172,6 +176,8 @@ export function ProductGrid() {
 				</div>
 			</div>
 
+			<Separator />
+
 			{/* Products Grid */}
 			{isLoading ? (
 				<div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -203,7 +209,7 @@ export function ProductGrid() {
 				<>
 					<div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 						{filteredAndSortedProducts.map((product) => (
-							<div key={product.id} className="fade-in">
+							<div key={product.id} className="fade-in h-full">
 								<ProductCard product={product} />
 							</div>
 						))}
@@ -218,6 +224,7 @@ export function ProductGrid() {
 					)}
 				</>
 			)}
+			</section>
 		</div>
 	);
 }

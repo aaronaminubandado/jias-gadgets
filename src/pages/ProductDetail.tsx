@@ -63,7 +63,7 @@ const ProductDetail = () => {
 	const hasImage = product?.image && product.image !== "/placeholder.svg";
 
 	return (
-		<div className="min-h-screen bg-gradient-background flex flex-col">
+		<div className="min-h-screen bg-background flex flex-col">
 			<Header />
 			<main className="container mx-auto px-4 py-8 flex-1">
 				{isLoading ? (
@@ -154,7 +154,7 @@ const ProductDetail = () => {
 								onClick={handleAddToCart}
 								disabled={!product.inStock}
 								size="lg"
-								className="mt-8 gap-2 bg-gradient-primary hover:opacity-90 transition-opacity"
+								className="mt-8 gap-2"
 							>
 								<ShoppingCart className="w-5 h-5" />
 								Add to Cart

@@ -129,7 +129,7 @@ export function CheckoutModal({
 					{/* Checkout Button */}
 					<Button
 						onClick={handleCheckout}
-						className="w-full gap-2 bg-gradient-primary hover:opacity-90 transition-opacity"
+						className="w-full gap-2"
 						disabled={isProcessing || cart.items.length === 0}
 						size="lg"
 					>

@@ -40,7 +40,7 @@ const Success = () => {
 
 	if (isVerifying) {
 		return (
-			<div className="min-h-screen bg-gradient-background flex flex-col">
+			<div className="min-h-screen bg-background flex flex-col">
 				<Header />
 				<div className="flex flex-1 items-center justify-center p-4">
 					<Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -50,7 +50,7 @@ const Success = () => {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-background flex flex-col">
+		<div className="min-h-screen bg-background flex flex-col">
 			<Header />
 			<div className="flex flex-1 items-center justify-center p-4">
 				<Card className="w-full max-w-md">

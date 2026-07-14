@@ -158,7 +158,7 @@ const Orders = () => {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col">
+		<div className="min-h-screen bg-background flex flex-col">
 			<div className="flex-1 p-4">
 			<div className="max-w-4xl mx-auto">
 				<div className="mb-6">

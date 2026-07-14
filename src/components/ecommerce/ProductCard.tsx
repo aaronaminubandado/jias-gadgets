@@ -32,8 +32,8 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Card className="product-card group border-card-border bg-card hover:shadow-lg transition-all duration-normal">
-      <CardContent className="p-0">
+    <Card className="product-card group flex h-full flex-col border-card-border bg-card hover:shadow-lg transition-all duration-normal">
+      <CardContent className="flex h-full flex-col p-0">
         <div className="relative overflow-hidden rounded-t-md">
           <Link to={`/product/${product.id}`} className="block aspect-[2/1] w-full overflow-hidden bg-muted">
             {product.image && product.image !== '/placeholder.svg' ? (
@@ -64,7 +64,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </Badge>
         </div>
         
-        <div className="p-6">
+        <div className="flex flex-1 flex-col p-6">
           <h3 className="mb-2 font-display text-lg font-semibold text-card-foreground line-clamp-1">
             <Link
               to={`/product/${product.id}`}
@@ -74,11 +74,11 @@ export function ProductCard({ product }: ProductCardProps) {
             </Link>
           </h3>
           
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-            {product.description}
+          <p className="mb-4 min-h-[2.5rem] flex-1 text-sm text-muted-foreground line-clamp-2">
+            {product.description || '\u00A0'}
           </p>
           
-          <div className="flex items-center justify-between">
+          <div className="mt-auto flex items-center justify-between">
             <div>
               <span className="font-mono text-2xl font-bold text-primary">
                 ${product.price.toFixed(2)}
@@ -92,7 +92,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <Button 
               onClick={handleAddToCart}
               disabled={!product.inStock}
-              className="gap-2 bg-gradient-primary hover:opacity-90 transition-opacity"
+              className="gap-2"
             >
               <ShoppingCart className="w-4 h-4" />
               Add to Cart

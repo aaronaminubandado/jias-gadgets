@@ -58,7 +58,7 @@ export function Header() {
 				<div className="flex items-center justify-between">
 					{/* Logo */}
 					<Link to="/" className="flex items-center gap-2">
-						<div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+						<div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
 							<Store className="w-5 h-5 text-white" />
 						</div>
 						<h1 className="text-xl font-bold text-foreground">Jia's Gadgets</h1>

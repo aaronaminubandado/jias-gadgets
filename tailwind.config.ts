@@ -75,11 +75,6 @@ export default {
     				ring: 'hsl(var(--sidebar-ring))'
     			}
     		},
-    		backgroundImage: {
-    			'gradient-primary': 'var(--gradient-primary)',
-    			'gradient-secondary': 'var(--gradient-secondary)',
-    			'gradient-background': 'var(--gradient-background)'
-    		},
     		boxShadow: {
     			sm: 'var(--shadow-sm)',
     			md: 'var(--shadow-md)',
