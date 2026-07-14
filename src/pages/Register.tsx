@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { AuthLayout } from "@/components/ecommerce/AuthLayout";
 
 const Register = () => {
 	const [email, setEmail] = useState("");
@@ -21,6 +22,7 @@ const Register = () => {
 	const { toast } = useToast();
 	const { register } = useAuth();
 	const [isLoading, setIsLoading] = useState(false);
+
 	const handleRegister = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -68,15 +70,13 @@ const Register = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
+		<AuthLayout pageTitle="Create Account">
 			<Card className="w-full max-w-md">
 				<CardHeader className="text-center">
-					<CardTitle className="text-2xl font-bold">
+					<CardTitle className="font-display text-2xl font-bold">
 						Create Account
 					</CardTitle>
-					<CardDescription>
-						Sign up to start shopping
-					</CardDescription>
+					<CardDescription>Sign up to start shopping</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={handleRegister} className="space-y-4">
@@ -115,16 +115,16 @@ const Register = () => {
 								minLength={6}
 							/>
 						</div>
-					<Button type="submit" className="w-full" disabled={isLoading}>
-						{isLoading ? "Creating account..." : "Sign Up"}
-					</Button>
+						<Button type="submit" className="w-full" disabled={isLoading}>
+							{isLoading ? "Creating account..." : "Sign Up"}
+						</Button>
 					</form>
 					<div className="mt-4 text-center">
 						<p className="text-sm text-muted-foreground">
 							Already have an account?{" "}
 							<Link
 								to="/login"
-								className="text-primary hover:underline font-medium"
+								className="font-medium text-primary hover:underline"
 							>
 								Sign in
 							</Link>
@@ -132,9 +132,8 @@ const Register = () => {
 					</div>
 				</CardContent>
 			</Card>
-		</div>
+		</AuthLayout>
 	);
 };
 
 export default Register;
-

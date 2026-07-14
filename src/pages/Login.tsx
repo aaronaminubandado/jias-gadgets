@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { AuthLayout } from "@/components/ecommerce/AuthLayout";
 
 const Login = () => {
 	const [email, setEmail] = useState("");
@@ -29,7 +30,6 @@ const Login = () => {
 				title: "Login successful",
 				description: "Welcome back!",
 			});
-			// Redirect based on role or to home
 			navigate("/");
 		} catch (error) {
 			const message = "Invalid email or password";
@@ -42,14 +42,14 @@ const Login = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
+		<AuthLayout pageTitle="Sign In">
 			<Card className="w-full max-w-md">
 				<CardHeader className="text-center">
-					<CardTitle className="text-2xl font-bold">
+					<CardTitle className="font-display text-2xl font-bold">
 						Sign In
 					</CardTitle>
 					<CardDescription>
-						Welcome back to Jia's Gadgets
+						Welcome back to Jia&apos;s Gadgets
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -82,10 +82,10 @@ const Login = () => {
 					</form>
 					<div className="mt-4 text-center space-y-2">
 						<p className="text-sm text-muted-foreground">
-							Don't have an account?{" "}
+							Don&apos;t have an account?{" "}
 							<Link
 								to="/register"
-								className="text-primary hover:underline font-medium"
+								className="font-medium text-primary hover:underline"
 							>
 								Sign up
 							</Link>
@@ -93,7 +93,7 @@ const Login = () => {
 					</div>
 				</CardContent>
 			</Card>
-		</div>
+		</AuthLayout>
 	);
 };
 
