@@ -10,9 +10,11 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AddProduct from "./pages/AddProduct";
 import Orders from "./pages/Orders";
+import ProductDetail from "./pages/ProductDetail";
 import Success from "./pages/Success";
 import Cancel from "./pages/Cancel";
 import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -29,10 +31,17 @@ const App = () => (
 							<Route path="/login" element={<Login />} />
 							<Route path="/register" element={<Register />} />
 							<Route path="/orders" element={<Orders />} />
+							<Route path="/product/:id" element={<ProductDetail />} />
 							<Route path="/success" element={<Success />} />
 							<Route path="/cancel" element={<Cancel />} />
-							<Route path="/store/add-product" element={<AddProduct />} />
-							<Route path="/admin/login" element={<Login />} />
+							<Route
+								path="/manage"
+								element={
+									<ProtectedRoute requiredRoles={["store", "admin"]}>
+										<AddProduct />
+									</ProtectedRoute>
+								}
+							/>
 							{/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
 							<Route path="*" element={<NotFound />} />
 						</Routes>

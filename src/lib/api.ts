@@ -152,7 +152,6 @@ export const authAPI = {
 // Product API
 export const productAPI = {
 	getAll: () => apiRequest<BackendProduct[]>("/products", { requireAuth: false }),
-	getByStore: () => apiRequest<BackendProduct[]>("/products/store/my-products"),
 	getById: (id: string) =>
 		apiRequest<BackendProduct>(`/products/${id}`, { requireAuth: false }),
 	create: (productData: FormData | Record<string, unknown>) => {

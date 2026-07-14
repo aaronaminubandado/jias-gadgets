@@ -273,7 +273,7 @@ const AddProductForm = () => {
 
 			toast({
 				title: "Product Created",
-				description: `${formData.name} has been successfully added to your store`,
+				description: `${formData.name} has been successfully added to the catalog`,
 			});
 
 			// Reset form
@@ -322,7 +322,7 @@ const AddProductForm = () => {
 						Add New Product
 					</CardTitle>
 					<CardDescription>
-						Fill in all the product details to add it to your store
+						Fill in the product details to add it to the shared
 						catalog
 					</CardDescription>
 				</CardHeader>

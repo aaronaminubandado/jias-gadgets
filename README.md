@@ -41,17 +41,11 @@ API integration is partially implemented and structured for easy extension.
 
 ---
 
-## Demo Access
+## Accounts and Roles
 
-The application includes demo accounts for testing purposes.
-
-### Customer Account
-- Email: customer@store.com
-- Password: customer123
-
-### Store Account
-- Email: store@store.com
-- Password: store123
+Public registration creates customer accounts only. Staff accounts
+(`store` and `admin`) are provisioned by the deployment operator —
+there is no public signup for staff roles.
 
 ## Stripe Test Payments
 

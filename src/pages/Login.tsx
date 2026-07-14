@@ -46,10 +46,10 @@ const Login = () => {
 			<Card className="w-full max-w-md">
 				<CardHeader className="text-center">
 					<CardTitle className="text-2xl font-bold">
-						Admin Login
+						Sign In
 					</CardTitle>
 					<CardDescription>
-						Sign in to manage your store
+						Welcome back to Jia's Gadgets
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -59,7 +59,7 @@ const Login = () => {
 							<Input
 								id="email"
 								type="email"
-								placeholder="admin@store.com"
+								placeholder="your@email.com"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
 								required
