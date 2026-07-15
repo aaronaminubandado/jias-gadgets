@@ -13,6 +13,7 @@ import {
 import { Header } from "@/components/ecommerce/Header";
 import { Footer } from "@/components/ecommerce/Footer";
 import { useCart } from "@/hooks/useCart";
+import { clearCartStorage } from "@/lib/cartStorage";
 
 const Success = () => {
 	const navigate = useNavigate();
@@ -30,9 +31,11 @@ const Success = () => {
 		}
 
 		// Stripe only redirects here after a completed checkout; the backend
-		// webhook marks the order paid independently. Clear the cart once.
+		// webhook marks the order paid independently. Clear storage first so
+		// a late hydration/persist cycle cannot restore the pre-checkout cart.
 		if (!hasClearedCart.current) {
 			hasClearedCart.current = true;
+			clearCartStorage();
 			clearCart();
 		}
 		setIsVerifying(false);

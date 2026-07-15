@@ -74,3 +74,13 @@ export function saveCartToStorage(
 		// Storage full or unavailable — cart stays in memory for this session
 	}
 }
+
+export function clearCartStorage(
+	storage: Pick<Storage, 'removeItem'> = localStorage
+) {
+	try {
+		storage.removeItem(CART_STORAGE_KEY);
+	} catch {
+		// Storage unavailable — in-memory clear still applies
+	}
+}

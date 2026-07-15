@@ -5,6 +5,8 @@ import {
 	parseStoredCart,
 	serializeCart,
 	computeCartTotals,
+	clearCartStorage,
+	saveCartToStorage,
 } from './cartStorage';
 import { Product } from '@/types/product';
 
@@ -63,5 +65,29 @@ describe('cartStorage', () => {
 
 	it('uses consistent storage key', () => {
 		expect(CART_STORAGE_KEY).toBe('jias-cart');
+	});
+
+	it('clearCartStorage removes persisted cart', () => {
+		const storage = {
+			data: {} as Record<string, string>,
+			setItem(key: string, value: string) {
+				this.data[key] = value;
+			},
+			getItem(key: string) {
+				return this.data[key] ?? null;
+			},
+			removeItem(key: string) {
+				delete this.data[key];
+			},
+		};
+
+		saveCartToStorage(
+			{ items: [{ product: sampleProduct, quantity: 1 }], total: 29.99, itemCount: 1 },
+			storage
+		);
+		expect(storage.getItem(CART_STORAGE_KEY)).not.toBeNull();
+
+		clearCartStorage(storage);
+		expect(storage.getItem(CART_STORAGE_KEY)).toBeNull();
 	});
 });
