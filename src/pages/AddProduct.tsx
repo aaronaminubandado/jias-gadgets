@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,7 +28,7 @@ import {
 	Save,
 	Image as ImageIcon,
 } from "lucide-react";
-import { productAPI } from "@/lib/api";
+import { productAPI, BackendProduct } from "@/lib/api";
 
 interface ProductFormData {
 	name: string;
@@ -60,30 +60,92 @@ const CATEGORIES = [
 	"Wearables",
 ];
 
-const AddProductForm = () => {
+const emptyFormData = (): ProductFormData => ({
+	name: "",
+	description: "",
+	price: "",
+	salePrice: "",
+	category: "",
+	brand: "",
+	sku: "",
+	stock: "",
+	weight: "",
+	length: "",
+	width: "",
+	height: "",
+	image: "",
+	tags: [],
+	featured: false,
+	inStock: true,
+});
+
+interface ProductFormProps {
+	mode?: "create" | "edit";
+	productId?: string;
+	onSaved?: () => void;
+	embedded?: boolean;
+}
+
+const AddProductForm = ({
+	mode = "create",
+	productId,
+	onSaved,
+	embedded = false,
+}: ProductFormProps) => {
+	const isEdit = mode === "edit" && !!productId;
 	const { toast } = useToast();
+	const [isLoadingProduct, setIsLoadingProduct] = useState(isEdit);
 	const [newTag, setNewTag] = useState("");
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreview, setImagePreview] = useState<string>("");
 	const fileInputRef = useRef<HTMLInputElement>(null);
-	const [formData, setFormData] = useState<ProductFormData>({
-		name: "",
-		description: "",
-		price: "",
-		salePrice: "",
-		category: "",
-		brand: "",
-		sku: "",
-		stock: "",
-		weight: "",
-		length: "",
-		width: "",
-		height: "",
-		image: "",
-		tags: [],
-		featured: false,
-		inStock: true,
-	});
+	const [formData, setFormData] = useState<ProductFormData>(emptyFormData());
+
+	useEffect(() => {
+		if (!isEdit || !productId) return;
+
+		const loadProduct = async () => {
+			try {
+				setIsLoadingProduct(true);
+				const product: BackendProduct = await productAPI.getById(productId);
+				setFormData({
+					name: product.name,
+					description: product.description || "",
+					price: String(product.price),
+					salePrice: "",
+					category: product.category,
+					brand: product.brand || "",
+					sku: product.sku || "",
+					stock: String(product.stock ?? 0),
+					weight: "",
+					length: "",
+					width: "",
+					height: "",
+					image: product.image || "",
+					tags: product.tags || [],
+					featured: product.featured ?? false,
+					inStock: (product.stock ?? 0) > 0,
+				});
+				if (product.image) {
+					setImagePreview(product.image);
+				}
+			} catch (error) {
+				const message =
+					error instanceof Error
+						? error.message
+						: "Failed to load product";
+				toast({
+					title: "Error",
+					description: message,
+					variant: "destructive",
+				});
+			} finally {
+				setIsLoadingProduct(false);
+			}
+		};
+
+		loadProduct();
+	}, [isEdit, productId, toast]);
 
 	const handleInputChange = (
 		field: keyof ProductFormData,
@@ -269,6 +331,16 @@ const AddProductForm = () => {
 				};
 			}
 
+			if (isEdit && productId) {
+				await productAPI.update(productId, productData);
+				toast({
+					title: "Product Updated",
+					description: `${formData.name} has been saved`,
+				});
+				onSaved?.();
+				return;
+			}
+
 			await productAPI.create(productData);
 
 			toast({
@@ -277,24 +349,7 @@ const AddProductForm = () => {
 			});
 
 			// Reset form
-			setFormData({
-				name: "",
-				description: "",
-				price: "",
-				salePrice: "",
-				category: "",
-				brand: "",
-				sku: "",
-				stock: "",
-				weight: "",
-				length: "",
-				width: "",
-				height: "",
-				image: "",
-				tags: [],
-				featured: false,
-				inStock: true,
-			});
+			setFormData(emptyFormData());
 			setImageFile(null);
 			setImagePreview("");
 			if (fileInputRef.current) {
@@ -314,19 +369,25 @@ const AddProductForm = () => {
 	};
 
 	return (
-		<div className="max-w-4xl mx-auto p-6">
+		<div className={embedded ? "" : "max-w-4xl mx-auto p-6"}>
 			<Card>
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<Package className="h-6 w-6" />
-						Add New Product
+						{isEdit ? "Edit Product" : "Add New Product"}
 					</CardTitle>
 					<CardDescription>
-						Fill in the product details to add it to the shared
-						catalog
+						{isEdit
+							? "Update catalog details for this product"
+							: "Fill in the product details to add it to the shared catalog"}
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
+					{isLoadingProduct ? (
+						<p className="text-sm text-muted-foreground py-8 text-center">
+							Loading product…
+						</p>
+					) : (
 					<form onSubmit={handleSubmit} className="space-y-6">
 						{/* Basic Information */}
 						<div className="space-y-4">
@@ -731,10 +792,11 @@ const AddProductForm = () => {
 								className="flex items-center gap-2"
 							>
 								<Save className="h-4 w-4" />
-								Add Product
+								{isEdit ? "Save changes" : "Add Product"}
 							</Button>
 						</div>
 					</form>
+					)}
 				</CardContent>
 			</Card>
 		</div>

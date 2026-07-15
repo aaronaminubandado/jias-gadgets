@@ -1,5 +1,6 @@
+import { useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { XCircle, ArrowLeft, ShoppingBag } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -11,11 +12,34 @@ import {
 import { Header } from "@/components/ecommerce/Header";
 import { Footer } from "@/components/ecommerce/Footer";
 import { useCart } from "@/hooks/useCart";
+import { checkoutAPI } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const Cancel = () => {
 	const navigate = useNavigate();
 	const { cart } = useCart();
+	const [searchParams] = useSearchParams();
+	const { toast } = useToast();
+	const hasCancelled = useRef(false);
 	const hasItems = cart.itemCount > 0;
+
+	useEffect(() => {
+		const sessionId = searchParams.get("session_id");
+		if (!sessionId || hasCancelled.current) return;
+
+		hasCancelled.current = true;
+		checkoutAPI.cancelSession(sessionId).catch((error) => {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Could not cancel the pending order";
+			toast({
+				title: "Order cancellation",
+				description: message,
+				variant: "destructive",
+			});
+		});
+	}, [searchParams, toast]);
 
 	return (
 		<div className="min-h-screen bg-background flex flex-col">

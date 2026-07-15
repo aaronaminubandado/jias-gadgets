@@ -225,7 +225,7 @@ const Orders = () => {
 		const fetchOrders = async () => {
 			try {
 				setIsLoading(true);
-				const response = await orderAPI.getAll(page, 10);
+				const response = await orderAPI.getAll({ page, limit: 10 });
 				setOrders(response.data);
 				if (response.meta?.limit && response.meta.limit > 0) {
                     					setTotalPages(Math.ceil(response.meta.total / response.meta.limit));

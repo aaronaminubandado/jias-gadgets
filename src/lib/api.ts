@@ -128,6 +128,8 @@ export interface Order {
 	fulfillmentMethod?: 'pickup' | 'delivery' | null;
 	customerName?: string | null;
 	phone?: string | null;
+	customerEmail?: string | null;
+	userId?: string | null;
 	shippingAddress?: ShippingAddress | null;
 	notes?: string | null;
 	createdAt: string;
@@ -137,6 +139,13 @@ export interface Order {
 	user?: string | null;
 }
 
+export interface OrdersQuery {
+	page?: number;
+	limit?: number;
+	status?: string;
+	fulfillmentStatus?: FulfillmentStatus;
+}
+
 export interface OrdersResponse {
 	data: Order[];
 	meta: {
@@ -144,6 +153,10 @@ export interface OrdersResponse {
 		page: number;
 		limit: number;
 	};
+}
+
+export interface OrderResponse {
+	data: Order;
 }
 
 // Checkout API Types
@@ -274,14 +287,23 @@ export const productAPI = {
 
 // Order API
 export const orderAPI = {
-	getAll: (page?: number, limit?: number) => {
+	getAll: (query: OrdersQuery = {}) => {
 		const params = new URLSearchParams();
-		if (page) params.append("page", page.toString());
-		if (limit) params.append("limit", limit.toString());
-		const query = params.toString() ? `?${params.toString()}` : "";
-		return apiRequest<OrdersResponse>(`/orders${query}`);
+		if (query.page) params.append("page", query.page.toString());
+		if (query.limit) params.append("limit", query.limit.toString());
+		if (query.status) params.append("status", query.status);
+		if (query.fulfillmentStatus) {
+			params.append("fulfillmentStatus", query.fulfillmentStatus);
+		}
+		const qs = params.toString() ? `?${params.toString()}` : "";
+		return apiRequest<OrdersResponse>(`/orders${qs}`);
 	},
-	getById: (id: string) => apiRequest<{ data: Order }>(`/orders/${id}`),
+	getById: (id: string) => apiRequest<OrderResponse>(`/orders/${id}`),
+	updateFulfillment: (id: string, fulfillmentStatus: FulfillmentStatus) =>
+		apiRequest<OrderResponse>(`/orders/${id}/fulfillment`, {
+			method: "PATCH",
+			body: JSON.stringify({ fulfillmentStatus }),
+		}),
 };
 
 // Checkout API - Guest checkout supported (no auth required)
@@ -295,6 +317,13 @@ export const checkoutAPI = {
 		}),
 	confirmSession: (sessionId: string) =>
 		apiRequest<ConfirmCheckoutResponse>("/checkout/confirm", {
+			method: "POST",
+			body: JSON.stringify({ sessionId }),
+			requireAuth: false,
+			attachAuthIfPresent: true,
+		}),
+	cancelSession: (sessionId: string) =>
+		apiRequest<OrderResponse>("/checkout/cancel", {
 			method: "POST",
 			body: JSON.stringify({ sessionId }),
 			requireAuth: false,

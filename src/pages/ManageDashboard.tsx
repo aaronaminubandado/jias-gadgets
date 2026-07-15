@@ -13,6 +13,8 @@ import { StoreLayout } from "@/components/ecommerce/StoreLayout";
 import { staffAPI, StaffMetrics } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import AddProductForm from "@/pages/AddProduct";
+import { StaffOrders } from "@/components/staff/StaffOrders";
+import { ManageProducts } from "@/components/staff/ManageProducts";
 
 const ManageDashboard = () => {
 	const [metrics, setMetrics] = useState<StaffMetrics | null>(null);
@@ -55,6 +57,8 @@ const ManageDashboard = () => {
 			<Tabs defaultValue="dashboard" className="space-y-6">
 				<TabsList>
 					<TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+					<TabsTrigger value="orders">Orders</TabsTrigger>
+					<TabsTrigger value="products">Products</TabsTrigger>
 					<TabsTrigger value="add-product">Add product</TabsTrigger>
 				</TabsList>
 
@@ -159,6 +163,14 @@ const ManageDashboard = () => {
 							</Card>
 						</>
 					) : null}
+				</TabsContent>
+
+				<TabsContent value="orders">
+					<StaffOrders />
+				</TabsContent>
+
+				<TabsContent value="products">
+					<ManageProducts />
 				</TabsContent>
 
 				<TabsContent value="add-product">

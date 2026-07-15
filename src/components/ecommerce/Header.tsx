@@ -97,6 +97,7 @@ export function Header() {
 									</Button>
 								</Link>
 							)}
+							{user?.role === 'customer' && (
 							<Link to="/orders">
 								<Button 
 									variant="outline" 
@@ -104,9 +105,10 @@ export function Header() {
 									className="gap-2 bg-background/50 border-border hover:bg-muted/50"
 								>
 									<Package className="w-4 h-4" />
-									<span className="hidden sm:inline">Orders</span>
+									<span className="hidden sm:inline">My Orders</span>
 								</Button>
 							</Link>
+							)}
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<Button 
