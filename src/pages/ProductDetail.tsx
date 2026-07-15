@@ -4,8 +4,7 @@ import { ShoppingCart, ArrowLeft, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Header } from "@/components/ecommerce/Header";
-import { Footer } from "@/components/ecommerce/Footer";
+import { StoreLayout } from "@/components/ecommerce/StoreLayout";
 import { productAPI } from "@/lib/api";
 import { convertProduct } from "@/lib/convertProduct";
 import { Product } from "@/types/product";
@@ -63,9 +62,7 @@ const ProductDetail = () => {
 	const hasImage = product?.image && product.image !== "/placeholder.svg";
 
 	return (
-		<div className="min-h-screen bg-background flex flex-col">
-			<Header />
-			<main className="container mx-auto px-4 py-8 flex-1">
+		<StoreLayout mainClassName="container mx-auto px-4 py-8">
 				{isLoading ? (
 					<div className="grid grid-cols-1 gap-8 md:grid-cols-2">
 						<Skeleton className="aspect-square w-full rounded-lg" />
@@ -168,9 +165,7 @@ const ProductDetail = () => {
 						</div>
 					</div>
 				)}
-			</main>
-			<Footer />
-		</div>
+		</StoreLayout>
 	);
 };
 

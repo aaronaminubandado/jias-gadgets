@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
 	Package,
-	ArrowLeft,
 	Calendar,
 	DollarSign,
 	Check,
@@ -23,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { orderAPI, Order } from "@/lib/api";
 import { format } from "date-fns";
-import { Footer } from "@/components/ecommerce/Footer";
+import { StoreLayout } from "@/components/ecommerce/StoreLayout";
 
 // Visualizes the payment lifecycle. Backend order statuses are exactly
 // pending | paid | failed | refunded — there are no fulfillment states.
@@ -158,18 +157,9 @@ const Orders = () => {
 	}
 
 	return (
-		<div className="min-h-screen bg-background flex flex-col">
-			<div className="flex-1 p-4">
+		<StoreLayout mainClassName="p-4">
 			<div className="max-w-4xl mx-auto">
 				<div className="mb-6">
-					<Button
-						variant="ghost"
-						onClick={() => navigate("/")}
-						className="mb-4"
-					>
-						<ArrowLeft className="w-4 h-4 mr-2" />
-						Back to Home
-					</Button>
 					<h1 className="text-3xl font-bold mb-2">My Orders</h1>
 					<p className="text-muted-foreground">
 						View your order history and track your purchases
@@ -344,9 +334,7 @@ const Orders = () => {
 					</div>
 				)}
 			</div>
-			</div>
-			<Footer />
-		</div>
+		</StoreLayout>
 	);
 };
 
