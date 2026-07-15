@@ -7,6 +7,10 @@ import {
 	Check,
 	Clock,
 	X,
+	Truck,
+	Store,
+	Phone,
+	MapPin,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -239,6 +243,76 @@ const Orders = () => {
 										<OrderStatusStepper
 											status={order.status}
 										/>
+										{(order.fulfillmentMethod ||
+											order.customerName) && (
+											<div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-2">
+												{order.fulfillmentMethod && (
+													<p className="flex items-center gap-2 font-medium">
+														{order.fulfillmentMethod ===
+														"delivery" ? (
+															<Truck className="h-4 w-4" />
+														) : (
+															<Store className="h-4 w-4" />
+														)}
+														{order.fulfillmentMethod ===
+														"delivery"
+															? "Delivery"
+															: "Store pickup"}
+													</p>
+												)}
+												{order.customerName && (
+													<p>{order.customerName}</p>
+												)}
+												{order.phone && (
+													<p className="flex items-center gap-2 text-muted-foreground">
+														<Phone className="h-3.5 w-3.5" />
+														{order.phone}
+													</p>
+												)}
+												{order.shippingAddress && (
+													<p className="flex items-start gap-2 text-muted-foreground">
+														<MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+														<span>
+															{
+																order
+																	.shippingAddress
+																	.line1
+															}
+															{order.shippingAddress
+																.line2
+																? `, ${order.shippingAddress.line2}`
+																: ""}
+															,{" "}
+															{
+																order
+																	.shippingAddress
+																	.city
+															}
+															{order.shippingAddress
+																.state
+																? `, ${order.shippingAddress.state}`
+																: ""}{" "}
+															{
+																order
+																	.shippingAddress
+																	.postalCode
+															}
+															,{" "}
+															{
+																order
+																	.shippingAddress
+																	.country
+															}
+														</span>
+													</p>
+												)}
+												{order.notes && (
+													<p className="text-muted-foreground italic">
+														Note: {order.notes}
+													</p>
+												)}
+											</div>
+										)}
 										<div className="space-y-2">
 											{order.products.map(
 												(product) => (

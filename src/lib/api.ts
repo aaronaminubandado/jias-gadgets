@@ -100,6 +100,15 @@ export interface OrderProduct {
 	price: number;
 }
 
+export interface ShippingAddress {
+	line1: string;
+	line2?: string;
+	city: string;
+	state?: string;
+	postalCode: string;
+	country: string;
+}
+
 export interface Order {
 	id: string;
 	products: OrderProduct[];
@@ -107,6 +116,11 @@ export interface Order {
 	totalAmountCents: number | null;
 	currency: string;
 	status: string;
+	fulfillmentMethod?: 'pickup' | 'delivery' | null;
+	customerName?: string | null;
+	phone?: string | null;
+	shippingAddress?: ShippingAddress | null;
+	notes?: string | null;
 	createdAt: string;
 	updatedAt: string;
 	paymentIntentId?: string | null;
@@ -129,8 +143,36 @@ export interface CheckoutItem {
 	quantity: number;
 }
 
+export type FulfillmentMethod = 'pickup' | 'delivery';
+
+export interface CheckoutFulfillment {
+	fulfillmentMethod: FulfillmentMethod;
+	customerName: string;
+	phone: string;
+	shippingAddress?: ShippingAddress;
+	notes?: string;
+}
+
+export interface CheckoutRequest {
+	items: CheckoutItem[];
+	fulfillmentMethod: FulfillmentMethod;
+	customerName: string;
+	phone: string;
+	shippingAddress?: ShippingAddress;
+	notes?: string;
+}
+
 export interface CheckoutResponse {
 	url: string;
+}
+
+export interface StaffMetrics {
+	totalOrders: number;
+	paidOrders: number;
+	revenueTotal: number;
+	ordersLast7Days: number;
+	productCount: number;
+	lowStockProducts: Array<{ id: string; name: string; stock: number }>;
 }
 
 // Auth API
@@ -231,11 +273,12 @@ export const orderAPI = {
 
 // Checkout API - Guest checkout supported (no auth required)
 export const checkoutAPI = {
-	createSession: (items: CheckoutItem[]) =>
+	createSession: (payload: CheckoutRequest) =>
 		apiRequest<CheckoutResponse>("/checkout", {
 			method: "POST",
-			body: JSON.stringify({ items }),
+			body: JSON.stringify(payload),
 			requireAuth: false,
 			attachAuthIfPresent: true,
 		}),
+};
 };
