@@ -56,13 +56,6 @@ Use the following Stripe test card to simulate a successful payment:
 - CVC: Any 3 digits
 - ZIP: Any 5 digits
 
-## Planned Improvements
-- Full authentication flow
-- Live product data integration
-- Stripe checkout redirect
-- User account and order history pages
-- Improved UI/UX and responsiveness
-
 ---
 
 ## Purpose
