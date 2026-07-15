@@ -281,4 +281,8 @@ export const checkoutAPI = {
 			attachAuthIfPresent: true,
 		}),
 };
+
+// Staff API
+export const staffAPI = {
+	getMetrics: () => apiRequest<StaffMetrics>("/staff/metrics"),
 };

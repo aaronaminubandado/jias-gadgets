@@ -8,7 +8,7 @@ import { CartProvider } from "@/hooks/useCart";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import AddProduct from "./pages/AddProduct";
+import ManageDashboard from "./pages/ManageDashboard";
 import Orders from "./pages/Orders";
 import ProductDetail from "./pages/ProductDetail";
 import Success from "./pages/Success";
@@ -38,7 +38,7 @@ const App = () => (
 								path="/manage"
 								element={
 									<ProtectedRoute requiredRoles={["store", "admin"]}>
-										<AddProduct />
+										<ManageDashboard />
 									</ProtectedRoute>
 								}
 							/>
