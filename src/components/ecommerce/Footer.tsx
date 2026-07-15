@@ -1,5 +1,6 @@
-import { Store, ShieldCheck } from 'lucide-react';
+import { Store, ShieldCheck, Phone, MapPin, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { storeContact } from '@/lib/storeContact';
 
 export function Footer() {
 	return (
@@ -46,15 +47,32 @@ export function Footer() {
 						</ul>
 					</div>
 
-					{/* Help */}
+					{/* Contact */}
 					<div>
 						<h3 className="font-mono text-xs uppercase tracking-[0.25em] text-background/60">
-							Help
+							Contact
 						</h3>
-						<ul className="mt-4 space-y-2 text-sm text-background/80">
-							<li>hello@jiasgadgets.com</li>
-							<li>30-day returns</li>
-							<li>Ships worldwide</li>
+						<ul className="mt-4 space-y-3 text-sm text-background/80">
+							<li>
+								<a
+									href={`mailto:${storeContact.email}`}
+									className="hover:text-background transition-colors"
+								>
+									{storeContact.email}
+								</a>
+							</li>
+							<li className="flex items-start gap-2">
+								<Phone className="mt-0.5 h-4 w-4 shrink-0 text-background/60" />
+								<span>{storeContact.phone}</span>
+							</li>
+							<li className="flex items-start gap-2">
+								<MapPin className="mt-0.5 h-4 w-4 shrink-0 text-background/60" />
+								<span>{storeContact.address}</span>
+							</li>
+							<li className="flex items-start gap-2">
+								<Clock className="mt-0.5 h-4 w-4 shrink-0 text-background/60" />
+								<span>{storeContact.hours}</span>
+							</li>
 						</ul>
 					</div>
 				</div>
