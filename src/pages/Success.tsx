@@ -14,31 +14,51 @@ import { Header } from "@/components/ecommerce/Header";
 import { Footer } from "@/components/ecommerce/Footer";
 import { useCart } from "@/hooks/useCart";
 import { clearCartStorage } from "@/lib/cartStorage";
+import { checkoutAPI } from "@/lib/api";
 
 const Success = () => {
 	const navigate = useNavigate();
 	const { clearCart } = useCart();
 	const [searchParams] = useSearchParams();
 	const [isVerifying, setIsVerifying] = useState(true);
-	const hasClearedCart = useRef(false);
+	const [confirmError, setConfirmError] = useState<string | null>(null);
+	const hasConfirmed = useRef(false);
 
 	useEffect(() => {
 		const sessionId = searchParams.get("session_id");
 		if (!sessionId) {
-			// No checkout session — nothing to confirm here.
 			navigate("/", { replace: true });
 			return;
 		}
 
-		// Stripe only redirects here after a completed checkout; the backend
-		// webhook marks the order paid independently. Clear storage first so
-		// a late hydration/persist cycle cannot restore the pre-checkout cart.
-		if (!hasClearedCart.current) {
-			hasClearedCart.current = true;
+		if (hasConfirmed.current) return;
+		hasConfirmed.current = true;
+
+		let cancelled = false;
+
+		(async () => {
+			try {
+				await checkoutAPI.confirmSession(sessionId);
+			} catch (error) {
+				if (!cancelled) {
+					const message =
+						error instanceof Error
+							? error.message
+							: "Could not confirm payment with the server";
+					setConfirmError(message);
+				}
+			}
+
+			if (cancelled) return;
+
 			clearCartStorage();
 			clearCart();
-		}
-		setIsVerifying(false);
+			setIsVerifying(false);
+		})();
+
+		return () => {
+			cancelled = true;
+		};
 	}, [searchParams, navigate, clearCart]);
 
 	if (isVerifying) {
@@ -76,6 +96,14 @@ const Success = () => {
 								You will receive an email confirmation shortly
 								with your order details.
 							</p>
+							{confirmError && (
+								<p className="text-sm text-amber-600 dark:text-amber-500">
+									We could not sync your order status
+									immediately ({confirmError}). If your
+									orders page still shows awaiting payment,
+									refresh in a moment or contact support.
+								</p>
+							)}
 							<p className="text-sm text-muted-foreground">
 								If you have any questions about your order,
 								please contact our support team.

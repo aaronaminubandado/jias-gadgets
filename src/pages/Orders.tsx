@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
 	Package,
@@ -24,76 +24,185 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { orderAPI, Order } from "@/lib/api";
+import { orderAPI, Order, FulfillmentStatus } from "@/lib/api";
 import { format } from "date-fns";
 import { StoreLayout } from "@/components/ecommerce/StoreLayout";
 
-// Visualizes the payment lifecycle. Backend order statuses are exactly
-// pending | paid | failed | refunded — there are no fulfillment states.
-const OrderStatusStepper = ({ status }: { status: string }) => {
+type StepVisual = {
+	icon: ReactNode;
+	circle: string;
+	label: string;
+	labelClass: string;
+};
+
+const Step = ({ visual }: { visual: StepVisual }) => (
+	<div className="flex items-center gap-2">
+		<span
+			className={`flex h-6 w-6 items-center justify-center rounded-full ${visual.circle}`}
+		>
+			{visual.icon}
+		</span>
+		<span className={`text-sm ${visual.labelClass}`}>{visual.label}</span>
+	</div>
+);
+
+const Connector = () => (
+	<span className="h-px w-6 bg-border shrink-0" aria-hidden="true" />
+);
+
+const getPaymentStep = (status: string): StepVisual & { refunded?: boolean } => {
 	const normalized = status.toLowerCase();
 
-	const paymentStep = (() => {
-		switch (normalized) {
-			case "paid":
+	switch (normalized) {
+		case "paid":
+			return {
+				icon: <Check className="w-3.5 h-3.5" />,
+				circle: "bg-primary text-primary-foreground",
+				label: "Paid",
+				labelClass: "text-foreground",
+			};
+		case "failed":
+			return {
+				icon: <X className="w-3.5 h-3.5" />,
+				circle: "bg-destructive text-destructive-foreground",
+				label: "Payment failed",
+				labelClass: "text-destructive",
+			};
+		case "refunded":
+			return {
+				icon: <Check className="w-3.5 h-3.5" />,
+				circle: "bg-primary text-primary-foreground",
+				label: "Paid",
+				labelClass: "text-foreground",
+				refunded: true,
+			};
+		default:
+			return {
+				icon: <Clock className="w-3.5 h-3.5" />,
+				circle:
+					"border-2 border-muted-foreground/40 text-muted-foreground bg-transparent",
+				label: "Awaiting payment",
+				labelClass: "text-muted-foreground",
+			};
+	}
+};
+
+const getFulfillmentStep = (
+	status: string,
+	fulfillmentStatus: FulfillmentStatus | undefined,
+	fulfillmentMethod: Order["fulfillmentMethod"]
+): StepVisual => {
+	const normalized = status.toLowerCase();
+	const method = fulfillmentMethod ?? "pickup";
+	const fs =
+		fulfillmentStatus ??
+		(normalized === "paid" ? "awaiting_fulfillment" : "awaiting_payment");
+
+	if (normalized === "failed" || fs === "cancelled") {
+		return {
+			icon: <X className="w-3.5 h-3.5" />,
+			circle: "bg-destructive text-destructive-foreground",
+			label: "Cancelled",
+			labelClass: "text-destructive",
+		};
+	}
+
+	if (normalized !== "paid") {
+		return {
+			icon: <Clock className="w-3.5 h-3.5" />,
+			circle:
+				"border-2 border-muted-foreground/40 text-muted-foreground bg-transparent",
+			label: method === "delivery" ? "Delivery" : "Pickup",
+			labelClass: "text-muted-foreground",
+		};
+	}
+
+	if (method === "delivery") {
+		switch (fs) {
+			case "out_for_delivery":
+				return {
+					icon: <Truck className="w-3.5 h-3.5" />,
+					circle: "bg-primary text-primary-foreground",
+					label: "Out for delivery",
+					labelClass: "text-foreground",
+				};
+			case "completed":
 				return {
 					icon: <Check className="w-3.5 h-3.5" />,
 					circle: "bg-primary text-primary-foreground",
-					label: "Paid",
+					label: "Delivered",
 					labelClass: "text-foreground",
-					refunded: false,
-				};
-			case "failed":
-				return {
-					icon: <X className="w-3.5 h-3.5" />,
-					circle: "bg-destructive text-destructive-foreground",
-					label: "Payment failed",
-					labelClass: "text-destructive",
-					refunded: false,
-				};
-			case "refunded":
-				return {
-					icon: <Check className="w-3.5 h-3.5" />,
-					circle: "bg-primary text-primary-foreground",
-					label: "Paid",
-					labelClass: "text-foreground",
-					refunded: true,
 				};
 			default:
 				return {
 					icon: <Clock className="w-3.5 h-3.5" />,
-					circle: "border-2 border-muted-foreground/40 text-muted-foreground bg-transparent",
-					label: "Awaiting payment",
-					labelClass: "text-muted-foreground",
-					refunded: false,
+					circle: "bg-secondary text-secondary-foreground",
+					label: "Preparing",
+					labelClass: "text-foreground",
 				};
 		}
-	})();
+	}
+
+	switch (fs) {
+		case "ready_for_pickup":
+			return {
+				icon: <Store className="w-3.5 h-3.5" />,
+				circle: "bg-primary text-primary-foreground",
+				label: "Ready for pickup",
+				labelClass: "text-foreground",
+			};
+		case "completed":
+			return {
+				icon: <Check className="w-3.5 h-3.5" />,
+				circle: "bg-primary text-primary-foreground",
+				label: "Completed",
+				labelClass: "text-foreground",
+			};
+		default:
+			return {
+				icon: <Clock className="w-3.5 h-3.5" />,
+				circle: "bg-secondary text-secondary-foreground",
+				label: "Awaiting pickup",
+				labelClass: "text-foreground",
+			};
+	}
+};
+
+const OrderStatusStepper = ({
+	status,
+	fulfillmentStatus,
+	fulfillmentMethod,
+}: {
+	status: string;
+	fulfillmentStatus?: FulfillmentStatus;
+	fulfillmentMethod?: Order["fulfillmentMethod"];
+}) => {
+	const paymentStep = getPaymentStep(status);
+	const fulfillmentStep = getFulfillmentStep(
+		status,
+		fulfillmentStatus,
+		fulfillmentMethod
+	);
 
 	return (
-		<div className="flex items-center gap-2">
+		<div className="flex flex-wrap items-center gap-2">
+			<Step
+				visual={{
+					icon: <Check className="w-3.5 h-3.5" />,
+					circle: "bg-primary text-primary-foreground",
+					label: "Order placed",
+					labelClass: "text-foreground",
+				}}
+			/>
+			<Connector />
 			<div className="flex items-center gap-2">
-				<span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
-					<Check className="w-3.5 h-3.5" />
-				</span>
-				<span className="text-sm text-foreground">Order placed</span>
-			</div>
-
-			<span className="h-px w-8 bg-border" aria-hidden="true" />
-
-			<div className="flex items-center gap-2">
-				<span
-					className={`flex h-6 w-6 items-center justify-center rounded-full ${paymentStep.circle}`}
-				>
-					{paymentStep.icon}
-				</span>
-				<span className={`text-sm ${paymentStep.labelClass}`}>
-					{paymentStep.label}
-				</span>
+				<Step visual={paymentStep} />
 				{paymentStep.refunded && (
 					<Badge variant="outline">Refunded</Badge>
 				)}
 			</div>
+			<Connector />
+			<Step visual={fulfillmentStep} />
 		</div>
 	);
 };
@@ -242,6 +351,12 @@ const Orders = () => {
 									<div className="space-y-4">
 										<OrderStatusStepper
 											status={order.status}
+											fulfillmentStatus={
+												order.fulfillmentStatus
+											}
+											fulfillmentMethod={
+												order.fulfillmentMethod
+											}
 										/>
 										{(order.fulfillmentMethod ||
 											order.customerName) && (

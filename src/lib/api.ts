@@ -109,6 +109,14 @@ export interface ShippingAddress {
 	country: string;
 }
 
+export type FulfillmentStatus =
+	| 'awaiting_payment'
+	| 'awaiting_fulfillment'
+	| 'ready_for_pickup'
+	| 'out_for_delivery'
+	| 'completed'
+	| 'cancelled';
+
 export interface Order {
 	id: string;
 	products: OrderProduct[];
@@ -116,6 +124,7 @@ export interface Order {
 	totalAmountCents: number | null;
 	currency: string;
 	status: string;
+	fulfillmentStatus?: FulfillmentStatus;
 	fulfillmentMethod?: 'pickup' | 'delivery' | null;
 	customerName?: string | null;
 	phone?: string | null;
@@ -164,6 +173,10 @@ export interface CheckoutRequest {
 
 export interface CheckoutResponse {
 	url: string;
+}
+
+export interface ConfirmCheckoutResponse {
+	data: Order;
 }
 
 export interface StaffMetrics {
@@ -277,6 +290,13 @@ export const checkoutAPI = {
 		apiRequest<CheckoutResponse>("/checkout", {
 			method: "POST",
 			body: JSON.stringify(payload),
+			requireAuth: false,
+			attachAuthIfPresent: true,
+		}),
+	confirmSession: (sessionId: string) =>
+		apiRequest<ConfirmCheckoutResponse>("/checkout/confirm", {
+			method: "POST",
+			body: JSON.stringify({ sessionId }),
 			requireAuth: false,
 			attachAuthIfPresent: true,
 		}),
