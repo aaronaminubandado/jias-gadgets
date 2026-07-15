@@ -16,14 +16,15 @@ const API_BASE_URL = getApiBaseUrl();
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 interface ApiRequestOptions extends RequestInit {
-	requireAuth?: boolean; // If false, don't send auth header (for guest checkout)
+	requireAuth?: boolean; // If false, don't require auth (still sends token when attachAuthIfPresent)
+	attachAuthIfPresent?: boolean; // Send Bearer token when available (guest checkout + logged-in)
 }
 
 async function apiRequest<T>(
 	endpoint: string,
 	options: ApiRequestOptions = {}
 ): Promise<T> {
-	const { requireAuth = true, ...fetchOptions } = options;
+	const { requireAuth = true, attachAuthIfPresent = false, ...fetchOptions } = options;
 	const token = localStorage.getItem("token");
 
 	const headers: HeadersInit = {
@@ -31,8 +32,7 @@ async function apiRequest<T>(
 		...fetchOptions.headers,
 	};
 
-	// Only add auth header if requireAuth is true and token exists
-	if (requireAuth && token) {
+	if (token && (requireAuth || attachAuthIfPresent)) {
 		(headers as Record<string, string>)[
 			"Authorization"
 		] = `Bearer ${token}`;
@@ -235,6 +235,7 @@ export const checkoutAPI = {
 		apiRequest<CheckoutResponse>("/checkout", {
 			method: "POST",
 			body: JSON.stringify({ items }),
-			requireAuth: false, // Guest checkout is supported
+			requireAuth: false,
+			attachAuthIfPresent: true,
 		}),
 };
